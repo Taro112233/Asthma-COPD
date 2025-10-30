@@ -1,5 +1,4 @@
 // prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,18 +8,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Assessment {
-  id             String   @id @default(cuid())
-  birthDate      DateTime // เก็บวันเดือนปีเกิด
-  province       String   // จังหวัดที่อาศัย
-  conditions     String[] // สภาวะหรือโรคประจำตัว
-  recommendation String
-  reason         String   @db.Text
-  ageRecommendation String?
-  ageReason      String?  @db.Text
-  provinceRecommendation String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+model Patient {
+  id              String       @id @default(cuid())
+  hospitalNumber  String       @unique // HN
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  height          Decimal?     @db.Decimal(5,2)
+  patientType     PatientType  // ADULT or CHILD
+  createdAt       DateTime     @default(now())
+  createdBy       String       // Username from cookie
+  assessments     Assessment[]
+  
+  @@index([hospitalNumber])
+  @@index([patientType])
+  @@map("patients")
+}
 
+model Assessment {
+  id                    String             @id @default(cuid())
+  patientId             String
+  patient               Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  
+  // Meta
+  assessmentRound       AssessmentRound
+  assessmentDate        DateTime
+  assessedBy            String             // Username from cookie
+  
+  // Header
+  alcohol               Boolean
+  alcoholAmount         String?
+  smoking               Boolean
+  smokingAmount         String?
+  
+  // Diagnosis
+  primaryDiagnosis      Diagnosis
+  note                  String?            @db.Text
+  
+  // Disease-specific (JSON for flexibility)
+  asthmaData            Json?              // {pef, limitedActivity, symptoms, controlLevel}
+  copdData              Json?              // {mMRC, cat, exacerbPerYear, fev1, sixMWD, stage, symptoms, severity}
+  
+  // Compliance
+  compliancePercent     Int
+  nonComplianceReasons  String[]
+  nonComplianceOther    String?            @db.Text
+  
+  // Side Effects
+  hasSideEffects        Boolean
+  sideEffects           String[]
+  sideEffectsOther      String?
+  sideEffectsManagement String?            @db.Text
+  
+  // Clinical Assessment
+  drps                  String?            @db.Text
+  medicationStatus      MedicationStatus
+  whyNotPrescribed      String?            @db.Text
+  
+  // Inhaler Technique
+  techniqueCorrect      Boolean
+  inhalerDevices        String[]
+  techniqueSteps        Json               // {prepare, inhale, rinse, empty}
+  spacerType            String?
+  
+  // Medications (JSON array)
+  medications           Json               // [{name, selected, custom, status}]
+  
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  
+  @@index([patientId, assessmentDate])
   @@map("assessments")
+}
+
+enum PatientType {
+  ADULT
+  CHILD
+}
+
+enum AssessmentRound {
+  PRE_COUNSELING
+  POST_COUNSELING
+}
+
+enum Diagnosis {
+  ASTHMA
+  COPD
+  ACOD
+  BRONCHIECTASIS
+  ALLERGIC_RHINITIS
+  GERD
+}
+
+enum MedicationStatus {
+  GOOD_COMPLIANCE
+  NOT_PRESCRIBED
+  NON_COMPLIANCE
 }
