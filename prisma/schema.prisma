@@ -1,0 +1,26 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Assessment {
+  id             String   @id @default(cuid())
+  birthDate      DateTime // เก็บวันเดือนปีเกิด
+  province       String   // จังหวัดที่อาศัย
+  conditions     String[] // สภาวะหรือโรคประจำตัว
+  recommendation String
+  reason         String   @db.Text
+  ageRecommendation String?
+  ageReason      String?  @db.Text
+  provinceRecommendation String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("assessments")
+}
