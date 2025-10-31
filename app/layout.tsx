@@ -1,5 +1,8 @@
+// app/layout.tsx
+
 import type { Metadata } from "next";
 import { Sarabun } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const sarabun = Sarabun({
@@ -24,6 +27,7 @@ export default function RootLayout({
         className={`${sarabun.variable} antialiased font-sans`}
       >
         {children}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

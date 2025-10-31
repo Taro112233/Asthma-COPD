@@ -35,14 +35,23 @@ export default function DashboardPage() {
       });
 
       if (res.ok) {
-        toast.success('ออกจากระบบสำเร็จ');
-        router.push('/');
+        toast.success('ออกจากระบบสำเร็จ', {
+          description: 'กำลังนำคุณกลับสู่หน้าหลัก...'
+        });
+        // Delay redirect slightly for better UX
+        setTimeout(() => {
+          router.push('/');
+        }, 500);
       } else {
-        toast.error('เกิดข้อผิดพลาดในการออกจากระบบ');
+        toast.error('เกิดข้อผิดพลาด', {
+          description: 'ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง'
+        });
       }
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      toast.error('เกิดข้อผิดพลาด', {
+        description: 'ไม่สามารถเชื่อมต่อกับระบบได้'
+      });
     }
   };
 

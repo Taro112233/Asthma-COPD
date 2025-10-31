@@ -36,14 +36,23 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success('เข้าสู่ระบบสำเร็จ');
-        router.push('/dashboard');
+        toast.success('เข้าสู่ระบบสำเร็จ', {
+          description: `ยินดีต้อนรับ ${username.trim()}`
+        });
+        // Delay redirect slightly for better UX
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 500);
       } else {
-        toast.error(data.error || 'รหัสผ่านไม่ถูกต้อง');
+        toast.error('เข้าสู่ระบบไม่สำเร็จ', {
+          description: data.error || 'รหัสผ่านไม่ถูกต้อง'
+        });
       }
     } catch (error) {
-      toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
       console.error('Login error:', error);
+      toast.error('เกิดข้อผิดพลาด', {
+        description: 'ไม่สามารถเชื่อมต่อกับระบบได้ กรุณาลองใหม่อีกครั้ง'
+      });
     } finally {
       setIsLoading(false);
     }
