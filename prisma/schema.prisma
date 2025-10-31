@@ -1,4 +1,7 @@
 // prisma/schema.prisma
+// Asthma & COPD Clinical Assessment System
+// Complete Database Schema - Production Ready
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,100 +11,165 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// PATIENT MODEL
+// ข้อมูลผู้ป่วย - บันทึกครั้งเดียวต่อ HN
+// ============================================
 model Patient {
   id              String       @id @default(cuid())
-  hospitalNumber  String       @unique // HN
-  firstName       String
-  lastName        String
-  dateOfBirth     DateTime?
-  height          Decimal?     @db.Decimal(5,2)
+  hospitalNumber  String       @unique // HN - unique identifier
+  firstName       String       // ชื่อ
+  lastName        String       // นามสกุล
+  nickname        String?      // ชื่อเล่น (เฉพาะเด็ก)
+  dateOfBirth     DateTime?    // วันเกิด (สำหรับคำนวณอายุ)
+  height          Decimal?     @db.Decimal(5,2) // ส่วนสูง (cm)
   patientType     PatientType  // ADULT or CHILD
+  
+  // Metadata
   createdAt       DateTime     @default(now())
   createdBy       String       // Username from cookie
+  updatedAt       DateTime     @updatedAt
+  
+  // Relations
   assessments     Assessment[]
   
+  // Indexes for performance
   @@index([hospitalNumber])
   @@index([patientType])
+  @@index([createdAt])
+  
   @@map("patients")
 }
 
+// ============================================
+// ASSESSMENT MODEL
+// การประเมินแต่ละครั้ง - 1 patient มีได้หลาย assessments
+// ============================================
 model Assessment {
   id                    String             @id @default(cuid())
   patientId             String
   patient               Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
   
-  // Meta
-  assessmentRound       AssessmentRound
-  assessmentDate        DateTime
-  assessedBy            String             // Username from cookie
+  // ========== META INFORMATION ==========
+  assessmentRound       AssessmentRound?   // PRE_COUNSELING | POST_COUNSELING (ผู้ใหญ่เท่านั้น, nullable สำหรับเด็ก)
+  assessmentDate        DateTime           // วันที่ประเมิน
+  assessedBy            String             // Username from cookie (ผู้ประเมิน)
   
-  // Header
-  alcohol               Boolean
-  alcoholAmount         String?
-  smoking               Boolean
-  smokingAmount         String?
+  // ========== HEADER SECTION (ADULT-SPECIFIC) ==========
+  alcohol               Boolean?           // ดื่มแอลกอฮอล์
+  alcoholAmount         String?            // ปริมาณแอลกอฮอล์ (ถ้ามี)
+  smoking               Boolean?           // สูบบุหรี่
+  smokingAmount         String?            // ปริมาณบุหรี่ (ถ้ามี)
   
-  // Diagnosis
-  primaryDiagnosis      Diagnosis
-  note                  String?            @db.Text
+  // ========== HEADER SECTION (CHILD-SPECIFIC) ==========
+  accompaniedBy         String?            // มาโรงพยาบาลกับ... (เด็ก)
+  age                   Int?               // อายุ (ปี) - เด็ก
+  predictedPEF          String?            // Predicted PEF - เด็ก
   
-  // Disease-specific (JSON for flexibility)
-  asthmaData            Json?              // {pef, limitedActivity, symptoms, controlLevel}
-  copdData              Json?              // {mMRC, cat, exacerbPerYear, fev1, sixMWD, stage, symptoms, severity}
+  // ========== DIAGNOSIS SECTION ==========
+  primaryDiagnosis      Diagnosis          // โรคหลัก (เลือกได้ 1)
+  secondaryDiagnoses    Diagnosis[]        // โรคแนบเพิ่มเติม (array, ถ้ามีหลายโรค)
+  note                  String?            @db.Text // Note/Risk factor (ผู้ใหญ่)
   
-  // Compliance
-  compliancePercent     Int
-  nonComplianceReasons  String[]
-  nonComplianceOther    String?            @db.Text
+  // ========== RISK FACTORS (CHILD ONLY) ==========
+  // JSON Structure: { weather: boolean, ar: boolean, dust: boolean, doll: boolean, 
+  //                   smoking: boolean, smoker: string, obesity: boolean }
+  riskFactors           Json?
   
-  // Side Effects
-  hasSideEffects        Boolean
-  sideEffects           String[]
-  sideEffectsOther      String?
-  sideEffectsManagement String?            @db.Text
+  // ========== DISEASE-SPECIFIC DATA (JSON) ==========
+  // asthmaData: { pef, pefPercent, limitedActivity/limitedActivityUnder5/limitedActivity6to11, controlLevel }
+  asthmaData            Json?
   
-  // Clinical Assessment
-  drps                  String?            @db.Text
-  medicationStatus      MedicationStatus
-  whyNotPrescribed      String?            @db.Text
+  // copdData: { mMRC, cat, exacerbPerYear, fev1, sixMWD, stage, abStatus, symptoms }
+  copdData              Json?
   
-  // Inhaler Technique
-  techniqueCorrect      Boolean
-  inhalerDevices        String[]
-  techniqueSteps        Json               // {prepare, inhale, rinse, empty}
-  spacerType            String?
+  // arData: { symptoms, severity, pattern }
+  arData                Json?
   
-  // Medications (JSON array)
-  medications           Json               // [{name, selected, custom, status}]
+  // ========== COMPLIANCE SECTION ==========
+  compliancePercent     Int                // เปอร์เซ็นต์การใช้ยา (0-100%)
+  complianceStatus      ComplianceStatus   // สถานะการใช้ยา
+  cannotAssessReason    String?            @db.Text // เหตุผลที่ประเมินไม่ได้ (ถ้า status = CANNOT_ASSESS)
+  nonComplianceReasons  String[]           // Array of reason codes (ถ้า status = NON_COMPLIANCE)
+  nonComplianceOther    String?            @db.Text // เหตุผลอื่น ๆ
   
+  // ========== SIDE EFFECTS SECTION ==========
+  hasSideEffects        Boolean            // มีผลข้างเคียง
+  sideEffects           String[]           // Array: ["ORAL_CANDIDIASIS", "HOARSE_VOICE", "PALPITATION", "OTHER"]
+  sideEffectsOther      String?            // ผลข้างเคียงอื่น ๆ (ระบุ)
+  sideEffectsManagement String?            @db.Text // การจัดการผลข้างเคียง (ผู้ใหญ่)
+  
+  // ========== CLINICAL ASSESSMENT ==========
+  drps                  String?            @db.Text // Drug Related Problems
+  medicationStatus      MedicationStatus   // สถานะยาคงเหลือ
+  unopenedMedication    Boolean?           // เหลือยาที่ยังไม่เปิดกล่อง
+  
+  // ========== INHALER TECHNIQUE SECTION ==========
+  techniqueCorrect      Boolean            // เทคนิคการพ่นยาถูกต้อง
+  inhalerDevices        String[]           // Array: ["MDI", "TURBO", "ACCU", "NS", "HAND", "ELLIPTA", "SPIOLTO"]
+  
+  // JSON Structure: { prepare: {MDI: {checked, note}, TURBO: {...}, ...}, inhale: {...}, rinse: {...}, empty: {...} }
+  techniqueSteps        Json               // Matrix 4 steps x 7 devices
+  
+  spacerType            String?            // "MOUTH_PIECE" | "VOLUMETRIC" | "CONE" | "NONE"
+  whoAdministers        String?            // เด็ก: "PARENT" | "PATIENT" | "RELATIVE" (ผู้ให้ยา)
+  
+  // ========== MEDICATIONS SECTION ==========
+  // JSON Array: [{ code: string, name: string, quantity: number, custom?: string }, ...]
+  medications           Json               // รายการยาที่จ่าย
+  
+  // ========== METADATA ==========
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   
+  // Indexes for performance
   @@index([patientId, assessmentDate])
+  @@index([assessmentDate])
+  @@index([primaryDiagnosis])
+  @@index([complianceStatus])
+  @@index([createdAt])
+  
   @@map("assessments")
 }
 
+// ============================================
+// ENUM DEFINITIONS
+// ============================================
+
+// Patient Type: Adult or Child
 enum PatientType {
-  ADULT
-  CHILD
+  ADULT  // ผู้ใหญ่
+  CHILD  // เด็ก
 }
 
+// Assessment Round: Pre or Post Counseling (Adult only)
 enum AssessmentRound {
-  PRE_COUNSELING
-  POST_COUNSELING
+  PRE_COUNSELING   // ก่อนให้คำปรึกษา
+  POST_COUNSELING  // หลังให้คำปรึกษา
 }
 
+// Primary Diagnosis
 enum Diagnosis {
-  ASTHMA
-  COPD
-  ACOD
-  BRONCHIECTASIS
-  ALLERGIC_RHINITIS
-  GERD
+  ASTHMA              // หอบหืด
+  COPD                // ปอดอุดกั้นเรื้อรัง
+  ACOD                // Asthma-COPD Overlap Disease
+  BRONCHIECTASIS      // หลอดลมขยายผิดปกติ
+  ALLERGIC_RHINITIS   // โรคจมูกอักเสบจากภูมิแพ้ (AR)
+  GERD                // โรคกรดไหลย้อน
+  OSA                 // Obstructive Sleep Apnea (เด็ก)
+  OTHER               // อื่น ๆ
 }
 
+// Compliance Status
+enum ComplianceStatus {
+  GOOD_COMPLIANCE  // ใช้ยาได้ดี
+  FIRST_USE        // ใช้ครั้งแรก
+  CANNOT_ASSESS    // ประเมินไม่ได้ เพราะ...
+  NON_COMPLIANCE   // ไม่ใช้ยาตามที่กำหนด
+}
+
+// Medication Status (remaining meds)
 enum MedicationStatus {
-  GOOD_COMPLIANCE
-  NOT_PRESCRIBED
-  NON_COMPLIANCE
+  HAS_REMAINING  // ไม่เหลือยา
+  NO_REMAINING   // เหลือยา
 }
