@@ -419,7 +419,7 @@ export function AdultAssessmentFormComplete() {
       {/* Scrollable Form Content */}
       <form onSubmit={handleSubmit} className="container mx-auto px-4 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-2">
             {/* 1. วันที่ */}
             <div className="col-span-2">
               <DateRoundSection

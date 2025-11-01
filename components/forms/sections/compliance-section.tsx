@@ -21,7 +21,7 @@ interface ComplianceSectionProps {
 
 export function ComplianceSection({ compliance, onComplianceChange }: ComplianceSectionProps) {
   return (
-    <Card className="col-span-2 col-start-1 row-start-6 p-2">
+    <Card className="col-span-2 col-start-1 row-start-6 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">A. การใช้ยา (Compliance %)</Label>
       <div className="space-y-1">
         <div className="grid grid-cols-2 gap-2">

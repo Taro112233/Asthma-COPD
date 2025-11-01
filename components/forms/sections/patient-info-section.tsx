@@ -29,7 +29,7 @@ interface PatientInfoSectionProps {
 
 export function PatientInfoSection(props: PatientInfoSectionProps) {
   return (
-    <Card className="col-span-2 col-start-3 p-2">
+    <Card className="col-span-2 col-start-3 p-2 h-full">
       <div className="space-y-1">
         <div className="grid grid-cols-5 gap-2 items-end">
           <div className="col-span-2">

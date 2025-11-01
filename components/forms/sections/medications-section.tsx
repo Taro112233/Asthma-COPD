@@ -47,7 +47,7 @@ const MEDICATION_LIST = [
 
 export function MedicationsSection({ medications, onMedicationsChange }: MedicationsSectionProps) {
   return (
-    <Card className="col-span-2 row-span-2 col-start-3 row-start-7 p-2">
+    <Card className="col-span-2 row-span-2 col-start-3 row-start-7 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">D. ร้านขายเหลือ</Label>
       <div className="space-y-1">
         <div className="flex gap-4">

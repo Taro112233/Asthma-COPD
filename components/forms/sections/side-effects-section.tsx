@@ -25,7 +25,7 @@ const SIDE_EFFECT_OPTIONS = [
 
 export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEffectsSectionProps) {
   return (
-    <Card className="col-span-2 col-start-3 row-start-5 p-2">
+    <Card className="col-span-2 col-start-3 row-start-5 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">ผลข้างเคียงจากการใช้ยา</Label>
       <div className="space-y-1">
         <div className="flex gap-4">

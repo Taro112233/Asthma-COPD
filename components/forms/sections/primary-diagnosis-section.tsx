@@ -19,7 +19,7 @@ const DIAGNOSIS_OPTIONS = [
 
 export function PrimaryDiagnosisSection({ primaryDiagnosis, onDiagnosisChange }: PrimaryDiagnosisSectionProps) {
   return (
-    <Card className="col-span-2 row-start-2 p-2">
+    <Card className="col-span-2 row-start-2 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">โรคหลัก *</Label>
       <div className="grid grid-cols-3 gap-x-3 gap-y-0.5">
         {DIAGNOSIS_OPTIONS.map(({ value, label }) => (

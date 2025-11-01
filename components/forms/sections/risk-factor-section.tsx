@@ -10,7 +10,7 @@ interface RiskFactorSectionProps {
 
 export function RiskFactorSection({ note, onNoteChange }: RiskFactorSectionProps) {
   return (
-    <Card className="col-span-2 col-start-1 row-start-3 p-2">
+    <Card className="col-span-2 col-start-1 row-start-3 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">Note/Risk factor</Label>
       <Textarea
         value={note}

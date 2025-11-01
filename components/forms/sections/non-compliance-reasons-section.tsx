@@ -32,7 +32,7 @@ const REASON_OPTIONS = [
 
 export function NonComplianceReasonsSection({ reasons, onReasonsChange }: NonComplianceReasonsSectionProps) {
   return (
-    <Card className="col-span-2 row-span-3 col-start-3 row-start-2 p-2">
+    <Card className="col-span-2 row-span-3 col-start-3 row-start-2 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">B. เหตุผลที่ไม่ใช้ยาตามที่กำหนด</Label>
       <div className="space-y-1">
         <div className="flex items-center gap-2">

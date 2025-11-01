@@ -10,7 +10,7 @@ interface DRPsSectionProps {
 
 export function DRPsSection({ drps, onDRPsChange }: DRPsSectionProps) {
   return (
-    <Card className="col-span-2 col-start-3 row-start-6 p-2">
+    <Card className="col-span-2 col-start-3 row-start-6 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">C. DRPs</Label>
       <Textarea
         value={drps}

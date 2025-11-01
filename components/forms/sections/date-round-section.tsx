@@ -18,7 +18,7 @@ export function DateRoundSection({
   onRoundChange 
 }: DateRoundSectionProps) {
   return (
-    <Card className="col-span-2 p-2">
+    <Card className="col-span-2 p-2 h-full">
       <div className="grid grid-cols-3 gap-2 items-center">
         <div>
           <Input
