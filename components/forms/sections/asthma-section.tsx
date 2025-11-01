@@ -55,11 +55,8 @@ export function AsthmaSection({ asthma, onAsthmaChange }: AsthmaSectionProps) {
               { key: 'rescue', label: 'Rescue', max: 8 },
               { key: 'er', label: 'ER', max: 0 },
               { key: 'admit', label: 'Admit', max: 0 },
-            ].map(({ key, label, max }) => (
+            ].map(({ key, label }) => (
               <div key={key} className="flex flex-col items-center">
-                <div className="border border-gray-300 p-1 w-full">
-                  <Label className="text-[10px] block text-center">({max})</Label>
-                </div>
                 <Label className="text-[10px] mt-0.5">{label}</Label>
               </div>
             ))}

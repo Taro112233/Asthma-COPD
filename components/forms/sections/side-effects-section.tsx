@@ -9,7 +9,9 @@ interface SideEffectsData {
   oralCandidiasis: boolean;
   hoarseVoice: boolean;
   palpitation: boolean;
-  other: string;
+  other: boolean;
+  otherDetail: string;
+  management: string;
 }
 
 interface SideEffectsSectionProps {
@@ -26,10 +28,10 @@ const SIDE_EFFECT_OPTIONS = [
 export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEffectsSectionProps) {
   return (
     <Card className="col-span-2 col-start-3 row-start-5 p-2 h-full">
-      <Label className="text-xs font-semibold mb-0.5 block">ผลข้างเคียงจากการใช้ยา</Label>
       <div className="space-y-1">
         <div className="flex gap-4">
           <div className="flex items-center space-x-1.5">
+            <Label className="text-xs font-semibold mb-0.5 block">ผลข้างเคียงจากการใช้ยา</Label>
             <Checkbox
               checked={sideEffects.hasSideEffects === true}
               onCheckedChange={(checked) => onSideEffectsChange({ hasSideEffects: !!checked })}
@@ -46,8 +48,8 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
             <Label htmlFor="se-no" className="text-xs">ไม่เกิด</Label>
           </div>
         </div>
-        
-        <div className="grid grid-cols-2 gap-2">
+
+        <div className="grid grid-cols-6 gap-2">
           {SIDE_EFFECT_OPTIONS.map(({ key, label }) => (
             <div key={key} className="flex items-center space-x-1.5">
               <Checkbox
@@ -58,15 +60,29 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
               <Label htmlFor={`se-${key}`} className="text-xs">{label}</Label>
             </div>
           ))}
+          <div className="flex items-center space-x-1.5 col-span-3">
+            <Checkbox
+              checked={sideEffects.other}
+              onCheckedChange={(checked) => onSideEffectsChange({ other: !!checked })}
+              id="se-other"
+            />
+            <Label htmlFor="se-other" className="text-xs">อื่น ๆ</Label>
+            <Input
+              value={sideEffects.otherDetail}
+              onChange={(e) => onSideEffectsChange({ otherDetail: e.target.value })}
+              className="h-6 text-xs flex-1"
+              placeholder="ระบุ"
+            />
+          </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <Label className="text-xs">อื่น ๆ</Label>
+          <Label className="text-xs">การจัดการ</Label>
           <Input
-            value={sideEffects.other}
-            onChange={(e) => onSideEffectsChange({ other: e.target.value })}
+            value={sideEffects.management}
+            onChange={(e) => onSideEffectsChange({ management: e.target.value })}
             className="h-6 text-xs flex-1"
-            placeholder="ระบุผลข้างเคียงอื่น ๆ"
+            placeholder="วิธีการจัดการผลข้างเคียง"
           />
         </div>
       </div>
