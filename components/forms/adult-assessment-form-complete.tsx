@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Home } from 'lucide-react';
 
 // Import all section components
 import { DateRoundSection } from './sections/date-round-section';
@@ -24,11 +24,8 @@ import { MedicationsSection } from './sections/medications-section';
 
 // Type definitions
 interface FormData {
-  // Meta
   assessmentDate: string;
   assessmentRound: 'PRE_COUNSELING' | 'POST_COUNSELING' | '';
-  
-  // Patient Info
   hospitalNumber: string;
   firstName: string;
   lastName: string;
@@ -37,12 +34,8 @@ interface FormData {
   alcoholAmount: string;
   smoking: 'YES' | 'NO' | '';
   smokingAmount: string;
-  
-  // Diagnosis
   primaryDiagnosis: string;
   note: string;
-  
-  // Asthma
   asthma: {
     pef: string;
     pefPercent: string;
@@ -53,8 +46,6 @@ interface FormData {
     admit: string;
     controlLevel: string;
   };
-  
-  // COPD
   copd: {
     mMRC: string;
     cat: string;
@@ -63,15 +54,11 @@ interface FormData {
     sixMWD: string;
     stage: string;
   };
-  
-  // AR
   ar: {
     symptoms: string;
     severity: 'MILD' | 'MOD_SEVERE' | '';
     pattern: 'INTERMITTENT' | 'PERSISTENT' | '';
   };
-  
-  // Compliance
   compliance: {
     complianceStatus: 'GOOD_COMPLIANCE' | 'FIRST_USE' | 'CANNOT_ASSESS' | 'NON_COMPLIANCE' | '';
     cannotAssessReason: string;
@@ -81,8 +68,6 @@ interface FormData {
       incorrectDosage: boolean;
     };
   };
-  
-  // Inhaler Technique
   technique: {
     techniqueCorrect: boolean;
     techniqueSteps: {
@@ -93,8 +78,6 @@ interface FormData {
     };
     spacerType: string;
   };
-  
-  // Non-compliance Reasons
   nonComplianceReasons: {
     lessThan: boolean;
     lessThanDetail: string;
@@ -107,11 +90,7 @@ interface FormData {
     fearSideEffects: boolean;
     other: string;
   };
-  
-  // DRPs
   drps: string;
-  
-  // Side Effects
   sideEffects: {
     hasSideEffects: boolean;
     oralCandidiasis: boolean;
@@ -119,8 +98,6 @@ interface FormData {
     palpitation: boolean;
     other: string;
   };
-  
-  // Medications
   medications: {
     medicationStatus: 'NO_REMAINING' | 'HAS_REMAINING' | '';
     budesonide: string;
@@ -288,7 +265,6 @@ export function AdultAssessmentFormComplete() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.hospitalNumber || !formData.firstName || !formData.lastName) {
       toast.error('กรุณากรอกข้อมูลที่จำเป็น: HN, ชื่อ, สกุล');
       return;
@@ -306,7 +282,6 @@ export function AdultAssessmentFormComplete() {
 
     setIsLoading(true);
     try {
-      // Prepare API data
       const apiData = {
         hospitalNumber: formData.hospitalNumber,
         firstName: formData.firstName,
@@ -322,8 +297,6 @@ export function AdultAssessmentFormComplete() {
         primaryDiagnosis: formData.primaryDiagnosis,
         secondaryDiagnoses: [],
         note: formData.note || null,
-        
-        // Disease data
         asthmaData: {
           pef: formData.asthma.pef || null,
           pefPercent: formData.asthma.pefPercent ? parseFloat(formData.asthma.pefPercent) : null,
@@ -336,7 +309,6 @@ export function AdultAssessmentFormComplete() {
           },
           controlLevel: formData.asthma.controlLevel || null,
         },
-        
         copdData: {
           mMRC: formData.copd.mMRC ? parseInt(formData.copd.mMRC) : null,
           cat: formData.copd.cat ? parseInt(formData.copd.cat) : null,
@@ -345,14 +317,11 @@ export function AdultAssessmentFormComplete() {
           sixMWD: formData.copd.sixMWD || null,
           stage: formData.copd.stage || null,
         },
-        
         arData: {
           symptoms: formData.ar.symptoms || null,
           severity: formData.ar.severity || null,
           pattern: formData.ar.pattern || null,
         },
-        
-        // Compliance
         complianceStatus: formData.compliance.complianceStatus,
         compliancePercent: parseInt(formData.compliance.compliancePercent) || 0,
         cannotAssessReason: formData.compliance.cannotAssessReason || null,
@@ -368,8 +337,6 @@ export function AdultAssessmentFormComplete() {
           ...(formData.nonComplianceReasons.fearSideEffects ? ['FEAR_SIDE_EFFECTS'] : []),
         ],
         nonComplianceOther: formData.nonComplianceReasons.other || null,
-        
-        // Side effects
         hasSideEffects: formData.sideEffects.hasSideEffects,
         sideEffects: [
           ...(formData.sideEffects.oralCandidiasis ? ['ORAL_CANDIDIASIS'] : []),
@@ -378,13 +345,9 @@ export function AdultAssessmentFormComplete() {
         ],
         sideEffectsOther: formData.sideEffects.other || null,
         sideEffectsManagement: null,
-        
-        // Clinical
         drps: formData.drps || null,
         medicationStatus: formData.medications.medicationStatus,
         unopenedMedication: formData.medications.medicationStatus === 'HAS_REMAINING',
-        
-        // Inhaler technique
         techniqueCorrect: formData.technique.techniqueCorrect,
         inhalerDevices: Object.keys(formData.technique.techniqueSteps.prepare || {}).filter(
           device => Object.values(formData.technique.techniqueSteps).some(
@@ -393,8 +356,6 @@ export function AdultAssessmentFormComplete() {
         ),
         techniqueSteps: formData.technique.techniqueSteps,
         spacerType: formData.technique.spacerType || null,
-        
-        // Medications
         medications: Object.entries(formData.medications)
           .filter(([key, value]) => key !== 'medicationStatus' && value && value.trim())
           .map(([key, value]) => ({
@@ -430,158 +391,210 @@ export function AdultAssessmentFormComplete() {
   };
 
   return (
-    <div className="w-full h-screen overflow-hidden bg-gradient-to-b from-blue-50 to-white p-3">
-      <form onSubmit={handleSubmit} className="h-full flex flex-col">
-        <div className="mb-2">
-          <h1 className="text-lg font-bold text-gray-900">
-            แบบบันทึกการติดตามดูแลผู้ป่วย Asthma/COPD
-          </h1>
-          <p className="text-xs text-gray-600">ผู้บันทึก: {username}</p>
-        </div>
-
-        <div className="flex-1 grid grid-cols-4 grid-rows-8 gap-2 overflow-hidden">
-          <DateRoundSection
-            assessmentDate={formData.assessmentDate}
-            assessmentRound={formData.assessmentRound}
-            onDateChange={(date) => setFormData(prev => ({ ...prev, assessmentDate: date }))}
-            onRoundChange={(round) => setFormData(prev => ({ ...prev, assessmentRound: round }))}
-          />
-
-          <PatientInfoSection
-            hospitalNumber={formData.hospitalNumber}
-            firstName={formData.firstName}
-            lastName={formData.lastName}
-            height={formData.height}
-            alcohol={formData.alcohol}
-            alcoholAmount={formData.alcoholAmount}
-            smoking={formData.smoking}
-            smokingAmount={formData.smokingAmount}
-            isSearching={isSearching}
-            onHospitalNumberChange={(value) => setFormData(prev => ({ ...prev, hospitalNumber: value }))}
-            onFirstNameChange={(value) => setFormData(prev => ({ ...prev, firstName: value }))}
-            onLastNameChange={(value) => setFormData(prev => ({ ...prev, lastName: value }))}
-            onHeightChange={(value) => setFormData(prev => ({ ...prev, height: value }))}
-            onAlcoholChange={(value) => setFormData(prev => ({ ...prev, alcohol: value }))}
-            onAlcoholAmountChange={(value) => setFormData(prev => ({ ...prev, alcoholAmount: value }))}
-            onSmokingChange={(value) => setFormData(prev => ({ ...prev, smoking: value }))}
-            onSmokingAmountChange={(value) => setFormData(prev => ({ ...prev, smokingAmount: value }))}
-            onSearch={searchPatient}
-          />
-
-          <PrimaryDiagnosisSection
-            primaryDiagnosis={formData.primaryDiagnosis}
-            onDiagnosisChange={(value) => setFormData(prev => ({ ...prev, primaryDiagnosis: value }))}
-          />
-
-          <RiskFactorSection
-            note={formData.note}
-            onNoteChange={(value) => setFormData(prev => ({ ...prev, note: value }))}
-          />
-
-          <AsthmaSection
-            asthma={formData.asthma}
-            onAsthmaChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              asthma: { ...prev.asthma, ...data } 
-            }))}
-          />
-
-          <COPDSection
-            copd={formData.copd}
-            onCOPDChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              copd: { ...prev.copd, ...data } 
-            }))}
-          />
-
-          <ARSection
-            ar={formData.ar}
-            onARChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              ar: { ...prev.ar, ...data } 
-            }))}
-          />
-
-          <ComplianceSection
-            compliance={formData.compliance}
-            onComplianceChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              compliance: { ...prev.compliance, ...data } 
-            }))}
-          />
-
-          <InhalerTechniqueSection
-            technique={formData.technique}
-            onTechniqueChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              technique: { ...prev.technique, ...data } 
-            }))}
-          />
-
-          <NonComplianceReasonsSection
-            reasons={formData.nonComplianceReasons}
-            onReasonsChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              nonComplianceReasons: { ...prev.nonComplianceReasons, ...data } 
-            }))}
-          />
-
-          <SideEffectsSection
-            sideEffects={formData.sideEffects}
-            onSideEffectsChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              sideEffects: { ...prev.sideEffects, ...data } 
-            }))}
-          />
-
-          <DRPsSection
-            drps={formData.drps}
-            onDRPsChange={(value) => setFormData(prev => ({ ...prev, drps: value }))}
-          />
-
-          <MedicationsSection
-            medications={formData.medications}
-            onMedicationsChange={(data) => setFormData(prev => ({ 
-              ...prev, 
-              medications: { ...prev.medications, ...data } 
-            }))}
-          />
-        </div>
-
-        <div className="mt-2 flex justify-between items-center">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/dashboard')}
-            disabled={isLoading}
-            size="sm"
-          >
-            ยกเลิก
-          </Button>
-          <div className="flex gap-2">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                แบบบันทึกการติดตามดูแลผู้ป่วย Asthma/COPD
+              </h1>
+              <p className="text-sm text-gray-600">ผู้บันทึก: {username}</p>
+            </div>
             <Button
               type="button"
-              variant="secondary"
-              onClick={() => {
-                if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
-                  window.location.reload();
-                }
-              }}
+              variant="outline"
+              onClick={() => router.push('/dashboard')}
               disabled={isLoading}
               size="sm"
             >
-              ล้างข้อมูล
+              <Home className="w-4 h-4 mr-2" />
+              กลับหน้าหลัก
             </Button>
-            <Button type="submit" disabled={isLoading} size="sm">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  กำลังบันทึก...
-                </>
-              ) : (
-                'บันทึกข้อมูล'
-              )}
-            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable Form Content */}
+      <form onSubmit={handleSubmit} className="container mx-auto px-4 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-4 gap-3">
+            {/* 1. วันที่ */}
+            <div className="col-span-2">
+              <DateRoundSection
+                assessmentDate={formData.assessmentDate}
+                assessmentRound={formData.assessmentRound}
+                onDateChange={(date) => setFormData(prev => ({ ...prev, assessmentDate: date }))}
+                onRoundChange={(round) => setFormData(prev => ({ ...prev, assessmentRound: round }))}
+              />
+            </div>
+
+            {/* 2. ข้อมูลผู้ป่วย */}
+            <div className="col-span-2 col-start-3">
+              <PatientInfoSection
+                hospitalNumber={formData.hospitalNumber}
+                firstName={formData.firstName}
+                lastName={formData.lastName}
+                height={formData.height}
+                alcohol={formData.alcohol}
+                alcoholAmount={formData.alcoholAmount}
+                smoking={formData.smoking}
+                smokingAmount={formData.smokingAmount}
+                isSearching={isSearching}
+                onHospitalNumberChange={(value) => setFormData(prev => ({ ...prev, hospitalNumber: value }))}
+                onFirstNameChange={(value) => setFormData(prev => ({ ...prev, firstName: value }))}
+                onLastNameChange={(value) => setFormData(prev => ({ ...prev, lastName: value }))}
+                onHeightChange={(value) => setFormData(prev => ({ ...prev, height: value }))}
+                onAlcoholChange={(value) => setFormData(prev => ({ ...prev, alcohol: value }))}
+                onAlcoholAmountChange={(value) => setFormData(prev => ({ ...prev, alcoholAmount: value }))}
+                onSmokingChange={(value) => setFormData(prev => ({ ...prev, smoking: value }))}
+                onSmokingAmountChange={(value) => setFormData(prev => ({ ...prev, smokingAmount: value }))}
+                onSearch={searchPatient}
+              />
+            </div>
+
+            {/* 3. โรคหลัก */}
+            <div className="col-span-2 row-start-2">
+              <PrimaryDiagnosisSection
+                primaryDiagnosis={formData.primaryDiagnosis}
+                onDiagnosisChange={(value) => setFormData(prev => ({ ...prev, primaryDiagnosis: value }))}
+              />
+            </div>
+
+            {/* 13. B. เหตุผลที่ไม่ใช้ยาตามที่กำหนด */}
+            <div className="col-span-2 row-span-3 col-start-3 row-start-2">
+              <NonComplianceReasonsSection
+                reasons={formData.nonComplianceReasons}
+                onReasonsChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  nonComplianceReasons: { ...prev.nonComplianceReasons, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 4. Note/Risk factor */}
+            <div className="col-span-2 col-start-1 row-start-3">
+              <RiskFactorSection
+                note={formData.note}
+                onNoteChange={(value) => setFormData(prev => ({ ...prev, note: value }))}
+              />
+            </div>
+
+            {/* 5. Asthma */}
+            <div className="row-span-2 col-start-1 row-start-4">
+              <AsthmaSection
+                asthma={formData.asthma}
+                onAsthmaChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  asthma: { ...prev.asthma, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 6. COPD */}
+            <div className="col-start-2 row-start-4">
+              <COPDSection
+                copd={formData.copd}
+                onCOPDChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  copd: { ...prev.copd, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 7. AR */}
+            <div className="col-start-2 row-start-5">
+              <ARSection
+                ar={formData.ar}
+                onARChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  ar: { ...prev.ar, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 12. ผลข้างเคียงจากการใช้ยา */}
+            <div className="col-span-2 col-start-3 row-start-5">
+              <SideEffectsSection
+                sideEffects={formData.sideEffects}
+                onSideEffectsChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  sideEffects: { ...prev.sideEffects, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 8. การใช้ยา */}
+            <div className="col-span-2 col-start-1 row-start-6">
+              <ComplianceSection
+                compliance={formData.compliance}
+                onComplianceChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  compliance: { ...prev.compliance, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 11. DRPs */}
+            <div className="col-span-2 col-start-3 row-start-6">
+              <DRPsSection
+                drps={formData.drps}
+                onDRPsChange={(value) => setFormData(prev => ({ ...prev, drps: value }))}
+              />
+            </div>
+
+            {/* 9. เทคนิคการพ่นยา */}
+            <div className="col-span-2 row-span-2 col-start-1 row-start-7">
+              <InhalerTechniqueSection
+                technique={formData.technique}
+                onTechniqueChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  technique: { ...prev.technique, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 10. ยาเหลือ */}
+            <div className="col-span-2 row-span-2 col-start-3 row-start-7">
+              <MedicationsSection
+                medications={formData.medications}
+                onMedicationsChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  medications: { ...prev.medications, ...data } 
+                }))}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="sticky bottom-0 bg-white border-t shadow-lg mt-6">
+          <div className="container mx-auto px-4 py-4">
+            <div className="max-w-7xl mx-auto flex justify-between items-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
+                    window.location.reload();
+                  }
+                }}
+                disabled={isLoading}
+              >
+                ล้างข้อมูล
+              </Button>
+              <Button type="submit" disabled={isLoading} size="lg">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'บันทึกข้อมูล'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </form>

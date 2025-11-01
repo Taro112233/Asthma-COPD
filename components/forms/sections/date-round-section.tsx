@@ -21,7 +21,6 @@ export function DateRoundSection({
     <Card className="col-span-2 p-2">
       <div className="grid grid-cols-3 gap-2 items-center">
         <div>
-          <Label className="text-xs mb-0.5 block">วันที่</Label>
           <Input
             type="date"
             value={assessmentDate}

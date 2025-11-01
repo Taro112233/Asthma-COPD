@@ -14,11 +14,22 @@ Directory structure:
     │   ├── globals.css
     │   ├── layout.tsx
     │   ├── page.tsx
+    │   ├── adult/
+    │   │   ├── page.tsx
+    │   │   └── success/
+    │   │       └── page.tsx
     │   ├── api/
-    │   │   └── auth/
-    │   │       ├── login/
-    │   │       │   └── route.ts
-    │   │       └── logout/
+    │   │   ├── assessments/
+    │   │   │   ├── route.ts
+    │   │   │   └── [id]/
+    │   │   │       └── route.ts
+    │   │   ├── auth/
+    │   │   │   ├── login/
+    │   │   │   │   └── route.ts
+    │   │   │   └── logout/
+    │   │   │       └── route.ts
+    │   │   └── patients/
+    │   │       └── search/
     │   │           └── route.ts
     │   ├── dashboard/
     │   │   └── page.tsx
@@ -32,6 +43,23 @@ Directory structure:
     │   │   ├── dashboard-header.tsx
     │   │   ├── info-section.tsx
     │   │   └── menu-card.tsx
+    │   ├── forms/
+    │   │   ├── adult-assessment-form-complete.tsx
+    │   │   └── sections/
+    │   │       ├── ar-section.tsx
+    │   │       ├── asthma-section.tsx
+    │   │       ├── compliance-section.tsx
+    │   │       ├── copd-section.tsx
+    │   │       ├── date-round-section.tsx
+    │   │       ├── drps-section.tsx
+    │   │       ├── index.ts
+    │   │       ├── inhaler-technique-section.tsx
+    │   │       ├── medications-section.tsx
+    │   │       ├── non-compliance-reasons-section.tsx
+    │   │       ├── patient-info-section.tsx
+    │   │       ├── primary-diagnosis-section.tsx
+    │   │       ├── risk-factor-section.tsx
+    │   │       └── side-effects-section.tsx
     │   └── ui/
     │       ├── accordion.tsx
     │       ├── alert-dialog.tsx

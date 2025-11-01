@@ -53,11 +53,11 @@ export function AsthmaSection({ asthma, onAsthmaChange }: AsthmaSectionProps) {
           <Label className="text-xs mb-0.5 block">Limited activity</Label>
           <div className="grid grid-cols-5 gap-1">
             {[
-              { key: 'day', label: 'Day (8)' },
-              { key: 'night', label: 'Night (0)' },
-              { key: 'rescue', label: 'Rescue (8)' },
-              { key: 'er', label: 'ER (0)' },
-              { key: 'admit', label: 'Admit (0)' },
+              { key: 'day', label: 'Day' },
+              { key: 'night', label: 'Night' },
+              { key: 'rescue', label: 'Rescue' },
+              { key: 'er', label: 'ER' },
+              { key: 'admit', label: 'Admit' },
             ].map(({ key, label }) => (
               <div key={key}>
                 <Label className="text-xs mb-0.5 block">{label}</Label>
