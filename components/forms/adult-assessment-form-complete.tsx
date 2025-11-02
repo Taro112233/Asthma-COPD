@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2, Home, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -170,11 +168,11 @@ export function AdultAssessmentFormComplete() {
     asthma: {
       pef: '',
       pefPercent: '',
-      day: '8',
-      night: '0',
-      rescue: '8',
-      er: '0',
-      admit: '0',
+      day: '',
+      night: '',
+      rescue: '',
+      er: '',
+      admit: '',
       controlLevel: '',
     },
     copd: {
@@ -322,11 +320,11 @@ export function AdultAssessmentFormComplete() {
           asthma: {
             pef: assessment.asthmaData?.pef || '',
             pefPercent: assessment.asthmaData?.pefPercent || '',
-            day: assessment.asthmaData?.limitedActivity?.day || '8',
-            night: assessment.asthmaData?.limitedActivity?.night || '0',
-            rescue: assessment.asthmaData?.limitedActivity?.rescue || '8',
-            er: assessment.asthmaData?.limitedActivity?.er || '0',
-            admit: assessment.asthmaData?.limitedActivity?.admit || '0',
+            day: assessment.asthmaData?.limitedActivity?.day || '',
+            night: assessment.asthmaData?.limitedActivity?.night || '',
+            rescue: assessment.asthmaData?.limitedActivity?.rescue || '',
+            er: assessment.asthmaData?.limitedActivity?.er || '',
+            admit: assessment.asthmaData?.limitedActivity?.admit || '',
             controlLevel: assessment.asthmaData?.controlLevel || '',
           },
           copd: {

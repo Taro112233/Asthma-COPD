@@ -25,36 +25,33 @@ export function AsthmaSection({ asthma, onAsthmaChange }: AsthmaSectionProps) {
     <Card className="row-span-2 col-start-1 row-start-4 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">Asthma</Label>
       <div className="space-y-1">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <Label className="text-xs mb-0.5 block">PEF</Label>
-            <Input
-              value={asthma.pef}
-              onChange={(e) => onAsthmaChange({ pef: e.target.value })}
-              className="h-6 text-xs"
-            />
-          </div>
-          <div>
-            <Label className="text-xs mb-0.5 block">( _________ %)</Label>
-            <Input
-              type="number"
-              value={asthma.pefPercent}
-              onChange={(e) => onAsthmaChange({ pefPercent: e.target.value })}
-              className="h-6 text-xs"
-              placeholder="%"
-            />
-          </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs whitespace-nowrap">PEF</Label>
+          <Input
+            value={asthma.pef}
+            onChange={(e) => onAsthmaChange({ pef: e.target.value })}
+            className="h-6 text-xs w-20"
+          />
+          <span className="text-xs">(</span>
+          <Input
+            type="number"
+            value={asthma.pefPercent}
+            onChange={(e) => onAsthmaChange({ pefPercent: e.target.value })}
+            className="h-6 text-xs w-16"
+            placeholder="%"
+          />
+          <span className="text-xs">%)</span>
         </div>
         
         <div>
           <Label className="text-xs mb-0.5 block">Limited activity</Label>
           <div className="grid grid-cols-5 gap-1">
             {[
-              { key: 'day', label: 'Day', max: 8 },
-              { key: 'night', label: 'Night', max: 0 },
-              { key: 'rescue', label: 'Rescue', max: 8 },
-              { key: 'er', label: 'ER', max: 0 },
-              { key: 'admit', label: 'Admit', max: 0 },
+              { key: 'day', label: 'Day' },
+              { key: 'night', label: 'Night' },
+              { key: 'rescue', label: 'Rescue' },
+              { key: 'er', label: 'ER' },
+              { key: 'admit', label: 'Admit' },
             ].map(({ key, label }) => (
               <div key={key} className="flex flex-col items-center">
                 <Label className="text-[10px] mt-0.5">{label}</Label>

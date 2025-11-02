@@ -1,8 +1,7 @@
 // app/page.tsx
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Stethoscope, Activity, ClipboardList } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export default function LandingPage() {
   return (
