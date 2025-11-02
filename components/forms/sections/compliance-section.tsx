@@ -22,14 +22,14 @@ interface ComplianceSectionProps {
 export function ComplianceSection({ compliance, onComplianceChange }: ComplianceSectionProps) {
   return (
     <Card className="col-span-2 col-start-1 row-start-6 p-2 h-full">
-      <Label className="text-xs font-semibold mb-0.5 block">A. การใช้ยา (Compliance %)</Label>
       <div className="space-y-1">
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center space-x-1.5">
+            <Label className="text-xs font-semibold mb-0.5 block">A. การใช้ยา (Compliance %)</Label>
             <Checkbox
               checked={compliance.complianceStatus === 'GOOD_COMPLIANCE'}
-              onCheckedChange={(checked) => onComplianceChange({ 
-                complianceStatus: checked ? 'GOOD_COMPLIANCE' : '' 
+              onCheckedChange={(checked) => onComplianceChange({
+                complianceStatus: checked ? 'GOOD_COMPLIANCE' : ''
               })}
               id="good"
             />
@@ -38,20 +38,20 @@ export function ComplianceSection({ compliance, onComplianceChange }: Compliance
           <div className="flex items-center space-x-1.5">
             <Checkbox
               checked={compliance.complianceStatus === 'FIRST_USE'}
-              onCheckedChange={(checked) => onComplianceChange({ 
-                complianceStatus: checked ? 'FIRST_USE' : '' 
+              onCheckedChange={(checked) => onComplianceChange({
+                complianceStatus: checked ? 'FIRST_USE' : ''
               })}
               id="first"
             />
             <Label htmlFor="first" className="text-xs">1st use</Label>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Checkbox
             checked={compliance.complianceStatus === 'CANNOT_ASSESS'}
-            onCheckedChange={(checked) => onComplianceChange({ 
-              complianceStatus: checked ? 'CANNOT_ASSESS' : '' 
+            onCheckedChange={(checked) => onComplianceChange({
+              complianceStatus: checked ? 'CANNOT_ASSESS' : ''
             })}
             id="cannot"
           />
@@ -63,20 +63,17 @@ export function ComplianceSection({ compliance, onComplianceChange }: Compliance
             placeholder="..."
           />
         </div>
-        
+
         <div className="flex items-center space-x-1.5">
           <Checkbox
             checked={compliance.complianceStatus === 'NON_COMPLIANCE'}
-            onCheckedChange={(checked) => onComplianceChange({ 
-              complianceStatus: checked ? 'NON_COMPLIANCE' : '' 
+            onCheckedChange={(checked) => onComplianceChange({
+              complianceStatus: checked ? 'NON_COMPLIANCE' : ''
             })}
             id="non"
           />
-          <Label htmlFor="non" className="text-xs">Non-compliance</Label>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-          <div className="flex items-center space-x-1.5">
+          <Label htmlFor="non" className="text-xs inline-flex items-center gap-1.5 flex-wrap">
+            Non-compliance (
             <Checkbox
               checked={compliance.nonComplianceReasons.incorrectTechnique}
               onCheckedChange={(checked) => onComplianceChange({
@@ -87,9 +84,7 @@ export function ComplianceSection({ compliance, onComplianceChange }: Compliance
               })}
               id="incorrectTech"
             />
-            <Label htmlFor="incorrectTech" className="text-xs">วิธีพ่นยาไม่ถูก</Label>
-          </div>
-          <div className="flex items-center space-x-1.5">
+            วิธีพ่นยาไม่ถูก
             <Checkbox
               checked={compliance.nonComplianceReasons.incorrectDosage}
               onCheckedChange={(checked) => onComplianceChange({
@@ -100,20 +95,8 @@ export function ComplianceSection({ compliance, onComplianceChange }: Compliance
               })}
               id="incorrectDose"
             />
-            <Label htmlFor="incorrectDose" className="text-xs">ใช้ไม่ตรงแพทย์</Label>
-          </div>
-        </div>
-        
-        <div>
-          <Label className="text-xs mb-0.5 block">Compliance %</Label>
-          <Input
-            type="number"
-            min="0"
-            max="100"
-            value={compliance.compliancePercent}
-            onChange={(e) => onComplianceChange({ compliancePercent: e.target.value })}
-            className="h-6 text-xs w-20"
-          />
+            ใช้ไม่ตรงแพทย์)
+          </Label>
         </div>
       </div>
     </Card>

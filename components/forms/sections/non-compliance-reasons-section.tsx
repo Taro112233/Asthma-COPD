@@ -20,6 +20,8 @@ interface NonComplianceReasons {
 interface NonComplianceReasonsSectionProps {
   reasons: NonComplianceReasons;
   onReasonsChange: (data: Partial<NonComplianceReasons>) => void;
+  compliancePercent: string;
+  onCompliancePercentChange: (value: string) => void;
 }
 
 const REASON_OPTIONS = [
@@ -30,10 +32,29 @@ const REASON_OPTIONS = [
   { key: 'fearSideEffects', label: 'กลัวผลข้างเคียง' },
 ];
 
-export function NonComplianceReasonsSection({ reasons, onReasonsChange }: NonComplianceReasonsSectionProps) {
+export function NonComplianceReasonsSection({ 
+  reasons, 
+  onReasonsChange,
+  compliancePercent,
+  onCompliancePercentChange 
+}: NonComplianceReasonsSectionProps) {
   return (
     <Card className="col-span-2 row-span-3 col-start-3 row-start-2 p-2 h-full">
-      <Label className="text-xs font-semibold mb-0.5 block">B. เหตุผลที่ไม่ใช้ยาตามที่กำหนด</Label>
+      <div className="flex justify-between items-center mb-1">
+        <Label className="text-xs font-semibold">B. เหตุผลที่ไม่ใช้ยาตามที่กำหนด</Label>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">Compliance %</Label>
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            value={compliancePercent}
+            onChange={(e) => onCompliancePercentChange(e.target.value)}
+            className="h-6 text-xs w-20"
+          />
+        </div>
+      </div>
+      
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <Checkbox

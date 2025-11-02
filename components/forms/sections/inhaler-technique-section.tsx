@@ -52,7 +52,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
     const checkedDevice = Object.entries(technique.techniqueSteps[stepKey] || {})
       .find(([_, val]) => val.checked)?.[0];
-    
+
     if (checkedDevice) {
       onTechniqueChange({
         techniqueSteps: {
@@ -71,10 +71,10 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
 
   return (
     <Card className="col-span-2 row-span-2 col-start-1 row-start-7 p-2 h-full">
-      <Label className="text-xs font-semibold mb-0.5 block">เทคนิคการพ่นยา</Label>
       <div className="space-y-1">
         <div className="flex gap-4">
           <div className="flex items-center space-x-1.5">
+            <Label className="text-xs font-semibold mb-0.5 block">เทคนิคการพ่นยา</Label>
             <Checkbox
               checked={technique.techniqueCorrect === true}
               onCheckedChange={(checked) => onTechniqueChange({ techniqueCorrect: !!checked })}
@@ -101,7 +101,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
             ))}
             <div className="p-1">รายละเอียด</div>
           </div>
-          
+
           {STEPS.map((step) => (
             <div key={step} className="grid grid-cols-9 border-b last:border-b-0">
               <div className="p-1 border-r font-medium">{step}</div>
@@ -131,14 +131,14 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
 
         {/* Spacer */}
         <div>
-          <Label className="text-xs mb-0.5 block">Spacer</Label>
           <div className="flex flex-wrap gap-2">
+            <Label className="text-xs mb-0.5 block">Spacer</Label>
             {SPACER_OPTIONS.map(({ value, label }) => (
               <div key={value} className="flex items-center space-x-1.5">
                 <Checkbox
                   checked={technique.spacerType === value}
-                  onCheckedChange={(checked) => onTechniqueChange({ 
-                    spacerType: checked ? value : '' 
+                  onCheckedChange={(checked) => onTechniqueChange({
+                    spacerType: checked ? value : ''
                   })}
                   id={`spacer-${value}`}
                 />

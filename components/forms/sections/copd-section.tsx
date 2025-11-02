@@ -24,19 +24,19 @@ export function COPDSection({ copd, onCOPDChange }: COPDSectionProps) {
       <Label className="text-xs font-semibold mb-0.5 block">COPD</Label>
       <div className="space-y-1">
         <div className="grid grid-cols-2 gap-2">
-          <div>
+          <div className="grid grid-cols-2 gap-2">
             <Label className="text-xs mb-0.5 block">mMRC</Label>
             <Input
-              type="number"
+              type="string"
               value={copd.mMRC}
               onChange={(e) => onCOPDChange({ mMRC: e.target.value })}
               className="h-6 text-xs"
             />
           </div>
-          <div>
+          <div className="grid grid-cols-2 gap-2">
             <Label className="text-xs mb-0.5 block">CAT</Label>
             <Input
-              type="number"
+              type="string"
               value={copd.cat}
               onChange={(e) => onCOPDChange({ cat: e.target.value })}
               className="h-6 text-xs"
@@ -45,19 +45,19 @@ export function COPDSection({ copd, onCOPDChange }: COPDSectionProps) {
         </div>
         
         <div className="grid grid-cols-2 gap-2">
-          <div>
+          <div className="grid grid-cols-2 gap-2">
             <Label className="text-xs mb-0.5 block">Exacerb/yr</Label>
             <Input
-              type="number"
+              type="string"
               value={copd.exacerbPerYear}
               onChange={(e) => onCOPDChange({ exacerbPerYear: e.target.value })}
               className="h-6 text-xs"
             />
           </div>
-          <div>
+          <div className="grid grid-cols-2 gap-2">
             <Label className="text-xs mb-0.5 block">FEV<sub>1</sub> %</Label>
             <Input
-              type="number"
+              type="string"
               value={copd.fev1}
               onChange={(e) => onCOPDChange({ fev1: e.target.value })}
               className="h-6 text-xs"
@@ -65,7 +65,7 @@ export function COPDSection({ copd, onCOPDChange }: COPDSectionProps) {
           </div>
         </div>
         
-        <div>
+        <div className="grid grid-cols-2 gap-2">
           <Label className="text-xs mb-0.5 block">6MWD</Label>
           <Input
             value={copd.sixMWD}
@@ -75,8 +75,8 @@ export function COPDSection({ copd, onCOPDChange }: COPDSectionProps) {
         </div>
         
         <div>
+          <div className="flex gap-2">
           <Label className="text-xs mb-0.5 block">Stage</Label>
-          <div className="flex gap-4">
             {['A', 'B', 'E'].map((stage) => (
               <div key={stage} className="flex items-center space-x-1.5">
                 <Checkbox

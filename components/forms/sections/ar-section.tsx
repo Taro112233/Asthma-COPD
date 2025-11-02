@@ -1,7 +1,7 @@
 // components/forms/sections/ar-section.tsx
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface ARData {
@@ -20,12 +20,12 @@ export function ARSection({ ar, onARChange }: ARSectionProps) {
     <Card className="col-start-2 row-start-5 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">AR</Label>
       <div className="space-y-1.5">
-        <div>
-          <Label className="text-xs mb-0.5 block">อาการ</Label>
-          <Textarea
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">อาการ</Label>
+          <Input
             value={ar.symptoms}
             onChange={(e) => onARChange({ symptoms: e.target.value })}
-            className="text-xs h-16 resize-none"
+            className="h-6 text-xs flex-1"
             placeholder="บันทึกอาการ..."
           />
         </div>

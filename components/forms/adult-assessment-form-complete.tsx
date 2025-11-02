@@ -5,10 +5,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Home } from 'lucide-react';
+import { Loader2, Home, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Import all section components
-import { DateRoundSection } from './sections/date-round-section';
 import { PatientInfoSection } from './sections/patient-info-section';
 import { PrimaryDiagnosisSection } from './sections/primary-diagnosis-section';
 import { RiskFactorSection } from './sections/risk-factor-section';
@@ -118,11 +127,32 @@ interface FormData {
   };
 }
 
+interface PatientVisit {
+  id: string;
+  assessmentDate: string;
+  assessmentRound: string;
+  primaryDiagnosis: string;
+  compliancePercent: number;
+  assessedBy: string;
+}
+
+interface PatientData {
+  id: string;
+  hospitalNumber: string;
+  firstName: string;
+  lastName: string;
+  height: string | null;
+  assessments: PatientVisit[];
+}
+
 export function AdultAssessmentFormComplete() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [username, setUsername] = useState('');
+  const [searchHN, setSearchHN] = useState('');
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [selectedVisitId, setSelectedVisitId] = useState<string>('');
   
   const [formData, setFormData] = useState<FormData>({
     assessmentDate: new Date().toISOString().split('T')[0],
@@ -232,6 +262,156 @@ export function AdultAssessmentFormComplete() {
       }
     }
   }, []);
+
+  const searchPatientByHN = async () => {
+    if (!searchHN.trim()) {
+      toast.error('กรุณากรอก HN');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/patients/search?hn=${searchHN.trim()}`);
+      if (res.ok) {
+        const patient: PatientData = await res.json();
+        setPatientData(patient);
+        setFormData(prev => ({
+          ...prev,
+          hospitalNumber: patient.hospitalNumber,
+          firstName: patient.firstName || '',
+          lastName: patient.lastName || '',
+          height: patient.height || '',
+        }));
+        setSelectedVisitId('');
+        toast.success(`พบข้อมูลผู้ป่วย: ${patient.firstName} ${patient.lastName} (${patient.assessments.length} visits)`);
+      } else {
+        setPatientData(null);
+        setSelectedVisitId('');
+        toast.info('ไม่พบข้อมูลผู้ป่วย จะสร้างข้อมูลใหม่');
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('เกิดข้อผิดพลาดในการค้นหา');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const loadVisitData = async (visitId: string) => {
+    if (!visitId) return;
+
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/assessments/${visitId}`);
+      if (res.ok) {
+        const assessment = await res.json();
+        
+        setFormData({
+          assessmentDate: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          assessmentRound: assessment.assessmentRound || '',
+          hospitalNumber: assessment.patient.hospitalNumber || '',
+          firstName: assessment.patient.firstName || '',
+          lastName: assessment.patient.lastName || '',
+          height: assessment.patient.height || '',
+          alcohol: assessment.alcohol === true ? 'YES' : assessment.alcohol === false ? 'NO' : '',
+          alcoholAmount: assessment.alcoholAmount || '',
+          smoking: assessment.smoking === true ? 'YES' : assessment.smoking === false ? 'NO' : '',
+          smokingAmount: assessment.smokingAmount || '',
+          primaryDiagnosis: assessment.primaryDiagnosis || '',
+          note: assessment.note || '',
+          asthma: {
+            pef: assessment.asthmaData?.pef || '',
+            pefPercent: assessment.asthmaData?.pefPercent || '',
+            day: assessment.asthmaData?.limitedActivity?.day || '8',
+            night: assessment.asthmaData?.limitedActivity?.night || '0',
+            rescue: assessment.asthmaData?.limitedActivity?.rescue || '8',
+            er: assessment.asthmaData?.limitedActivity?.er || '0',
+            admit: assessment.asthmaData?.limitedActivity?.admit || '0',
+            controlLevel: assessment.asthmaData?.controlLevel || '',
+          },
+          copd: {
+            mMRC: assessment.copdData?.mMRC || '',
+            cat: assessment.copdData?.cat || '',
+            exacerbPerYear: assessment.copdData?.exacerbPerYear || '',
+            fev1: assessment.copdData?.fev1 || '',
+            sixMWD: assessment.copdData?.sixMWD || '',
+            stage: assessment.copdData?.stage || '',
+          },
+          ar: {
+            symptoms: assessment.arData?.symptoms || '',
+            severity: assessment.arData?.severity || '',
+            pattern: assessment.arData?.pattern || '',
+          },
+          compliance: {
+            complianceStatus: assessment.complianceStatus || '',
+            cannotAssessReason: assessment.cannotAssessReason || '',
+            compliancePercent: assessment.compliancePercent?.toString() || '',
+            nonComplianceReasons: {
+              incorrectTechnique: assessment.nonComplianceReasons?.includes('INCORRECT_TECHNIQUE') || false,
+              incorrectDosage: assessment.nonComplianceReasons?.includes('INCORRECT_DOSAGE') || false,
+            },
+          },
+          technique: {
+            techniqueCorrect: assessment.techniqueCorrect || false,
+            techniqueSteps: assessment.techniqueSteps || {
+              prepare: {},
+              inhale: {},
+              rinse: {},
+              empty: {},
+            },
+            spacerType: assessment.spacerType || '',
+          },
+          nonComplianceReasons: {
+            lessThan: assessment.nonComplianceReasons?.includes('LESS_THAN') || false,
+            lessThanDetail: '',
+            moreThan: assessment.nonComplianceReasons?.includes('MORE_THAN') || false,
+            moreThanDetail: '',
+            lackKnowledge: assessment.nonComplianceReasons?.includes('LACK_KNOWLEDGE') || false,
+            notReadLabel: assessment.nonComplianceReasons?.includes('NOT_READ_LABEL') || false,
+            elderly: assessment.nonComplianceReasons?.includes('ELDERLY') || false,
+            forget: assessment.nonComplianceReasons?.includes('FORGET') || false,
+            fearSideEffects: assessment.nonComplianceReasons?.includes('FEAR_SIDE_EFFECTS') || false,
+            other: assessment.nonComplianceOther || '',
+          },
+          drps: assessment.drps || '',
+          sideEffects: {
+            hasSideEffects: assessment.hasSideEffects || false,
+            oralCandidiasis: assessment.sideEffects?.includes('ORAL_CANDIDIASIS') || false,
+            hoarseVoice: assessment.sideEffects?.includes('HOARSE_VOICE') || false,
+            palpitation: assessment.sideEffects?.includes('PALPITATION') || false,
+            other: assessment.sideEffectsOther || '',
+          },
+          medications: {
+            medicationStatus: assessment.medicationStatus || '',
+            budesonide: '',
+            seretide25_125: '',
+            seretide50_250: '',
+            seretideAccu: '',
+            symbicort160: '',
+            symbicort320: '',
+            ventolinMDI: '',
+            berodualMDI: '',
+            avamysNS: '',
+            theophylline: '',
+            montelukast: '',
+            spirivaHand: '',
+            ellipta: '',
+            spiolto: '',
+            other: '',
+          },
+        });
+        
+        toast.success('โหลดข้อมูลการเข้ารับการรักษาสำเร็จ');
+      } else {
+        toast.error('ไม่สามารถโหลดข้อมูลการเข้ารับการรักษาได้');
+      }
+    } catch (error) {
+      console.error('Load visit error:', error);
+      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const searchPatient = async () => {
     if (!formData.hospitalNumber.trim()) {
@@ -402,16 +582,72 @@ export function AdultAssessmentFormComplete() {
               </h1>
               <p className="text-sm text-gray-600">ผู้บันทึก: {username}</p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/dashboard')}
-              disabled={isLoading}
-              size="sm"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              กลับหน้าหลัก
-            </Button>
+            <div className="flex gap-2 items-center">
+              {/* Visit Selection */}
+              {patientData && patientData.assessments.length > 0 && (
+                <Select
+                  value={selectedVisitId}
+                  onValueChange={(value) => {
+                    setSelectedVisitId(value);
+                    if (value !== 'new') {
+                      loadVisitData(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-sm w-48">
+                    <SelectValue placeholder="เพิ่ม Visit ใหม่" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="new">เพิ่ม Visit ใหม่</SelectItem>
+                    {patientData.assessments.map((visit) => (
+                      <SelectItem key={visit.id} value={visit.id}>
+                        {new Date(visit.assessmentDate).toLocaleDateString('th-TH', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })} - {visit.assessmentRound === 'PRE_COUNSELING' ? 'Pre' : 'Post'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Search HN */}
+              <div className="flex gap-1 items-center">
+                <Input
+                  value={searchHN}
+                  onChange={(e) => setSearchHN(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && searchPatientByHN()}
+                  className="h-9 text-sm w-32"
+                  placeholder="ค้นหา HN"
+                  disabled={isSearching}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={searchPatientByHN}
+                  disabled={isSearching}
+                  variant="outline"
+                >
+                  {isSearching ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push('/dashboard')}
+                disabled={isLoading}
+                size="sm"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                กลับหน้าหลัก
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -420,18 +656,16 @@ export function AdultAssessmentFormComplete() {
       <form onSubmit={handleSubmit} className="container mx-auto px-4 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-4 gap-2">
-            {/* 1. วันที่ */}
+            {/* 1. โรคหลัก */}
             <div className="col-span-2">
-              <DateRoundSection
-                assessmentDate={formData.assessmentDate}
-                assessmentRound={formData.assessmentRound}
-                onDateChange={(date) => setFormData(prev => ({ ...prev, assessmentDate: date }))}
-                onRoundChange={(round) => setFormData(prev => ({ ...prev, assessmentRound: round }))}
+              <PrimaryDiagnosisSection
+                primaryDiagnosis={formData.primaryDiagnosis}
+                onDiagnosisChange={(value) => setFormData(prev => ({ ...prev, primaryDiagnosis: value }))}
               />
             </div>
 
             {/* 2. ข้อมูลผู้ป่วย */}
-            <div className="col-span-2 col-start-3">
+            <div className="col-span-2 row-span-2 col-start-3">
               <PatientInfoSection
                 hospitalNumber={formData.hospitalNumber}
                 firstName={formData.firstName}
@@ -454,35 +688,16 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 3. โรคหลัก */}
+            {/* 3. Note/Risk factor */}
             <div className="col-span-2 row-start-2">
-              <PrimaryDiagnosisSection
-                primaryDiagnosis={formData.primaryDiagnosis}
-                onDiagnosisChange={(value) => setFormData(prev => ({ ...prev, primaryDiagnosis: value }))}
-              />
-            </div>
-
-            {/* 13. B. เหตุผลที่ไม่ใช้ยาตามที่กำหนด */}
-            <div className="col-span-2 row-span-3 col-start-3 row-start-2">
-              <NonComplianceReasonsSection
-                reasons={formData.nonComplianceReasons}
-                onReasonsChange={(data) => setFormData(prev => ({ 
-                  ...prev, 
-                  nonComplianceReasons: { ...prev.nonComplianceReasons, ...data } 
-                }))}
-              />
-            </div>
-
-            {/* 4. Note/Risk factor */}
-            <div className="col-span-2 col-start-1 row-start-3">
               <RiskFactorSection
                 note={formData.note}
                 onNoteChange={(value) => setFormData(prev => ({ ...prev, note: value }))}
               />
             </div>
 
-            {/* 5. Asthma */}
-            <div className="row-span-2 col-start-1 row-start-4">
+            {/* 4. Asthma */}
+            <div className="row-span-2 row-start-3">
               <AsthmaSection
                 asthma={formData.asthma}
                 onAsthmaChange={(data) => setFormData(prev => ({ 
@@ -492,8 +707,8 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 6. COPD */}
-            <div className="col-start-2 row-start-4">
+            {/* 5. COPD */}
+            <div className="row-start-3">
               <COPDSection
                 copd={formData.copd}
                 onCOPDChange={(data) => setFormData(prev => ({ 
@@ -503,8 +718,8 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 7. AR */}
-            <div className="col-start-2 row-start-5">
+            {/* 6. AR */}
+            <div className="col-start-2 row-start-4">
               <ARSection
                 ar={formData.ar}
                 onARChange={(data) => setFormData(prev => ({ 
@@ -514,8 +729,19 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 12. ผลข้างเคียงจากการใช้ยา */}
-            <div className="col-span-2 col-start-3 row-start-5">
+            {/* 7. เหตุผลที่ไม่ใช้ยาตามที่กำหนด */}
+            <div className="col-span-2 col-start-3 row-start-3">
+              <NonComplianceReasonsSection
+                reasons={formData.nonComplianceReasons}
+                onReasonsChange={(data) => setFormData(prev => ({ 
+                  ...prev, 
+                  nonComplianceReasons: { ...prev.nonComplianceReasons, ...data } 
+                }))}
+              />
+            </div>
+
+            {/* 8. ผลข้างเคียงจากการใช้ยา */}
+            <div className="col-span-2 col-start-3 row-start-4">
               <SideEffectsSection
                 sideEffects={formData.sideEffects}
                 onSideEffectsChange={(data) => setFormData(prev => ({ 
@@ -525,8 +751,8 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 8. การใช้ยา */}
-            <div className="col-span-2 col-start-1 row-start-6">
+            {/* 9. การใช้ยา */}
+            <div className="col-span-2 row-start-5">
               <ComplianceSection
                 compliance={formData.compliance}
                 onComplianceChange={(data) => setFormData(prev => ({ 
@@ -536,16 +762,16 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 11. DRPs */}
-            <div className="col-span-2 col-start-3 row-start-6">
+            {/* 10. DRPs */}
+            <div className="col-span-2 col-start-3 row-start-5">
               <DRPsSection
                 drps={formData.drps}
                 onDRPsChange={(value) => setFormData(prev => ({ ...prev, drps: value }))}
               />
             </div>
 
-            {/* 9. เทคนิคการพ่นยา */}
-            <div className="col-span-2 row-span-2 col-start-1 row-start-7">
+            {/* 11. เทคนิคการพ่นยา */}
+            <div className="col-span-2 row-span-2 row-start-6">
               <InhalerTechniqueSection
                 technique={formData.technique}
                 onTechniqueChange={(data) => setFormData(prev => ({ 
@@ -555,8 +781,8 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 10. ยาเหลือ */}
-            <div className="col-span-2 row-span-2 col-start-3 row-start-7">
+            {/* 12. ยาเหลือ */}
+            <div className="col-span-2 row-span-2 col-start-3 row-start-6">
               <MedicationsSection
                 medications={formData.medications}
                 onMedicationsChange={(data) => setFormData(prev => ({ 

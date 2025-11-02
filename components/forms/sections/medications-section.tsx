@@ -48,9 +48,9 @@ const MEDICATION_LIST = [
 export function MedicationsSection({ medications, onMedicationsChange }: MedicationsSectionProps) {
   return (
     <Card className="col-span-2 row-span-2 col-start-3 row-start-7 p-2 h-full">
-      <Label className="text-xs font-semibold mb-0.5 block">D. ร้านขายเหลือ</Label>
       <div className="space-y-1">
         <div className="flex gap-4">
+          <Label className="text-xs font-semibold mb-0.5 block">จำนวนยาเหลือ</Label>
           <div className="flex items-center space-x-1.5">
             <Checkbox
               checked={medications.medicationStatus === 'NO_REMAINING'}
@@ -85,16 +85,16 @@ export function MedicationsSection({ medications, onMedicationsChange }: Medicat
               />
             </div>
           ))}
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Label className="text-xs">อื่น ๆ</Label>
-          <Input
-            value={medications.other}
-            onChange={(e) => onMedicationsChange({ other: e.target.value })}
-            className="h-6 text-xs flex-1"
-            placeholder="ระบุยาอื่น ๆ"
-          />
+          
+          {/* อื่น ๆ อยู่ในชอย์สุดท้ายของ grid */}
+          <div className="flex items-center gap-1">
+            <Label className="text-xs w-24">อื่น ๆ</Label>
+            <Input
+              value={medications.other}
+              onChange={(e) => onMedicationsChange({ other: e.target.value })}
+              className="h-6 text-xs w-14"
+            />
+          </div>
         </div>
       </div>
     </Card>

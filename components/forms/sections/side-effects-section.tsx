@@ -31,7 +31,7 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
       <div className="space-y-1">
         <div className="flex gap-4">
           <div className="flex items-center space-x-1.5">
-            <Label className="text-xs font-semibold mb-0.5 block">ผลข้างเคียงจากการใช้ยา</Label>
+            <Label className="text-xs font-semibold mb-0.5 block">C. ผลข้างเคียงจากการใช้ยา</Label>
             <Checkbox
               checked={sideEffects.hasSideEffects === true}
               onCheckedChange={(checked) => onSideEffectsChange({ hasSideEffects: !!checked })}
@@ -49,7 +49,7 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
           </div>
         </div>
 
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {SIDE_EFFECT_OPTIONS.map(({ key, label }) => (
             <div key={key} className="flex items-center space-x-1.5">
               <Checkbox
@@ -60,7 +60,7 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
               <Label htmlFor={`se-${key}`} className="text-xs">{label}</Label>
             </div>
           ))}
-          <div className="flex items-center space-x-1.5 col-span-3">
+          <div className="flex items-center space-x-1.5 col-span-2">
             <Checkbox
               checked={sideEffects.other}
               onCheckedChange={(checked) => onSideEffectsChange({ other: !!checked })}
