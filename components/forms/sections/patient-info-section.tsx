@@ -21,6 +21,8 @@ interface PatientInfoSectionProps {
   onAlcoholAmountChange: (value: string) => void;
   onSmokingChange: (value: 'YES' | 'NO' | '') => void;
   onSmokingAmountChange: (value: string) => void;
+  onSearch?: () => void; // เพิ่ม optional
+  isSearching?: boolean; // เพิ่ม optional
 }
 
 export function PatientInfoSection(props: PatientInfoSectionProps) {

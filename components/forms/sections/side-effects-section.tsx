@@ -9,9 +9,9 @@ interface SideEffectsData {
   oralCandidiasis: boolean;
   hoarseVoice: boolean;
   palpitation: boolean;
-  other: boolean;
-  otherDetail: string;
-  management: string;
+  other: string; // เปลี่ยนเป็น string แทน boolean
+  otherDetail?: string; // ลบออก ใช้ other แทน
+  management?: string; // ลบออก ใช้ management ใน main form
 }
 
 interface SideEffectsSectionProps {
@@ -61,29 +61,15 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
             </div>
           ))}
           <div className="flex items-center space-x-1.5 col-span-2">
-            <Checkbox
-              checked={sideEffects.other}
-              onCheckedChange={(checked) => onSideEffectsChange({ other: !!checked })}
-              id="se-other"
-            />
-            <Label htmlFor="se-other" className="text-xs">อื่น ๆ</Label>
+            <Label htmlFor="se-other-input" className="text-xs">อื่น ๆ</Label>
             <Input
-              value={sideEffects.otherDetail}
-              onChange={(e) => onSideEffectsChange({ otherDetail: e.target.value })}
+              id="se-other-input"
+              value={sideEffects.other}
+              onChange={(e) => onSideEffectsChange({ other: e.target.value })}
               className="h-6 text-xs flex-1"
               placeholder="ระบุ"
             />
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Label className="text-xs">การจัดการ</Label>
-          <Input
-            value={sideEffects.management}
-            onChange={(e) => onSideEffectsChange({ management: e.target.value })}
-            className="h-6 text-xs flex-1"
-            placeholder="วิธีการจัดการผลข้างเคียง"
-          />
         </div>
       </div>
     </Card>

@@ -51,7 +51,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
   const handleNoteChange = (step: string, value: string) => {
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
     const checkedDevice = Object.entries(technique.techniqueSteps[stepKey] || {})
-      .find(([_, val]) => val.checked)?.[0];
+      .find(([, val]) => val.checked)?.[0];
 
     if (checkedDevice) {
       onTechniqueChange({
@@ -118,7 +118,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
                 <Input
                   value={
                     Object.entries(technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps] || {})
-                      .find(([_, val]) => val.checked)?.[1]?.note || ''
+                      .find(([, val]) => val.checked)?.[1]?.note || ''
                   }
                   onChange={(e) => handleNoteChange(step, e.target.value)}
                   className="h-5 text-xs border-0 focus-visible:ring-0"
