@@ -3,12 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Check, X } from 'lucide-react';
 
 interface TechniqueSteps {
-  prepare: { [device: string]: { checked: boolean; note: string } };
-  inhale: { [device: string]: { checked: boolean; note: string } };
-  rinse: { [device: string]: { checked: boolean; note: string } };
-  empty: { [device: string]: { checked: boolean; note: string } };
+  prepare: { [device: string]: { status: 'correct' | 'incorrect' | 'none'; note: string } };
+  inhale: { [device: string]: { status: 'correct' | 'incorrect' | 'none'; note: string } };
+  rinse: { [device: string]: { status: 'correct' | 'incorrect' | 'none'; note: string } };
+  empty: { [device: string]: { status: 'correct' | 'incorrect' | 'none'; note: string } };
 }
 
 interface InhalerTechniqueData {
@@ -32,15 +33,26 @@ const SPACER_OPTIONS = [
 ];
 
 export function InhalerTechniqueSection({ technique, onTechniqueChange }: InhalerTechniqueSectionProps) {
-  const handleStepCheck = (step: string, device: string, checked: boolean) => {
+  const handleStepClick = (step: string, device: string) => {
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
+    const currentStatus = technique.techniqueSteps[stepKey]?.[device]?.status || 'none';
+    
+    let newStatus: 'correct' | 'incorrect' | 'none';
+    if (currentStatus === 'none') {
+      newStatus = 'correct';
+    } else if (currentStatus === 'correct') {
+      newStatus = 'incorrect';
+    } else {
+      newStatus = 'none';
+    }
+
     onTechniqueChange({
       techniqueSteps: {
         ...technique.techniqueSteps,
         [stepKey]: {
           ...technique.techniqueSteps[stepKey],
           [device]: {
-            checked,
+            status: newStatus,
             note: technique.techniqueSteps[stepKey]?.[device]?.note || '',
           }
         }
@@ -50,23 +62,32 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
 
   const handleNoteChange = (step: string, value: string) => {
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
-    const checkedDevice = Object.entries(technique.techniqueSteps[stepKey] || {})
-      .find(([, val]) => val.checked)?.[0];
+    const activeDevice = Object.entries(technique.techniqueSteps[stepKey] || {})
+      .find(([, val]) => val.status !== 'none')?.[0];
 
-    if (checkedDevice) {
+    if (activeDevice) {
       onTechniqueChange({
         techniqueSteps: {
           ...technique.techniqueSteps,
           [stepKey]: {
             ...technique.techniqueSteps[stepKey],
-            [checkedDevice]: {
-              checked: true,
+            [activeDevice]: {
+              status: technique.techniqueSteps[stepKey][activeDevice].status,
               note: value,
             }
           }
         }
       });
     }
+  };
+
+  const renderStatusIcon = (status: 'correct' | 'incorrect' | 'none') => {
+    if (status === 'correct') {
+      return <Check className="w-4 h-4 text-green-600" />;
+    } else if (status === 'incorrect') {
+      return <X className="w-4 h-4 text-red-600" />;
+    }
+    return null;
   };
 
   return (
@@ -94,7 +115,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
 
         {/* Technique Table */}
         <div className="border rounded text-xs">
-          <div className="grid grid-cols-9 bg-gray-100 border-b">
+          <div className="grid grid-cols-[80px_repeat(7,60px)_1fr] bg-gray-100 border-b">
             <div className="p-1 border-r font-semibold">รูปแบบ</div>
             {DEVICES.map(device => (
               <div key={device} className="p-1 border-r text-center">{device === 'TURBO' ? 'Turbu' : device}</div>
@@ -103,22 +124,25 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
           </div>
 
           {STEPS.map((step) => (
-            <div key={step} className="grid grid-cols-9 border-b last:border-b-0">
+            <div key={step} className="grid grid-cols-[80px_repeat(7,60px)_1fr] border-b last:border-b-0">
               <div className="p-1 border-r font-medium">{step}</div>
-              {DEVICES.map((device) => (
-                <div key={device} className="p-1 border-r flex items-center justify-center">
-                  <Checkbox
-                    checked={technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps]?.[device]?.checked || false}
-                    onCheckedChange={(checked) => handleStepCheck(step, device, !!checked)}
-                    id={`${step}-${device}`}
-                  />
-                </div>
-              ))}
+              {DEVICES.map((device) => {
+                const status = technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps]?.[device]?.status || 'none';
+                return (
+                  <div 
+                    key={device} 
+                    className="p-1 border-r flex items-center justify-center cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleStepClick(step, device)}
+                  >
+                    {renderStatusIcon(status)}
+                  </div>
+                );
+              })}
               <div className="p-0.5">
                 <Input
                   value={
                     Object.entries(technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps] || {})
-                      .find(([, val]) => val.checked)?.[1]?.note || ''
+                      .find(([, val]) => val.status !== 'none')?.[1]?.note || ''
                   }
                   onChange={(e) => handleNoteChange(step, e.target.value)}
                   className="h-5 text-xs border-0 focus-visible:ring-0"

@@ -9,9 +9,8 @@ interface SideEffectsData {
   oralCandidiasis: boolean;
   hoarseVoice: boolean;
   palpitation: boolean;
-  other: string; // เปลี่ยนเป็น string แทน boolean
-  otherDetail?: string; // ลบออก ใช้ other แทน
-  management?: string; // ลบออก ใช้ management ใน main form
+  other: string;
+  management: string;
 }
 
 interface SideEffectsSectionProps {
@@ -70,6 +69,16 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
               placeholder="ระบุ"
             />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">การจัดการ</Label>
+          <Input
+            value={sideEffects.management}
+            onChange={(e) => onSideEffectsChange({ management: e.target.value })}
+            className="h-6 text-xs flex-1"
+            placeholder="ระบุวิธีการจัดการผลข้างเคียง"
+          />
         </div>
       </div>
     </Card>

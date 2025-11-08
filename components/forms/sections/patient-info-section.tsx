@@ -8,7 +8,7 @@ interface PatientInfoSectionProps {
   hospitalNumber: string;
   firstName: string;
   lastName: string;
-  height: string;
+  age: string;
   alcohol: string;
   alcoholAmount: string;
   smoking: string;
@@ -16,7 +16,7 @@ interface PatientInfoSectionProps {
   onHospitalNumberChange: (value: string) => void;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
-  onHeightChange: (value: string) => void;
+  onAgeChange: (value: string) => void;
   onAlcoholChange: (value: 'YES' | 'NO' | '') => void;
   onAlcoholAmountChange: (value: string) => void;
   onSmokingChange: (value: 'YES' | 'NO' | '') => void;
@@ -52,11 +52,11 @@ export function PatientInfoSection(props: PatientInfoSectionProps) {
             onChange={(e) => props.onLastNameChange(e.target.value)}
             className="h-6 text-xs flex-1"
           />
-          <Label className="text-xs whitespace-nowrap">ส่วนสูง (cm)</Label>
+          <Label className="text-xs whitespace-nowrap">อายุ (ปี)</Label>
           <Input
             type="number"
-            value={props.height}
-            onChange={(e) => props.onHeightChange(e.target.value)}
+            value={props.age}
+            onChange={(e) => props.onAgeChange(e.target.value)}
             className="h-6 text-xs w-24"
           />
         </div>

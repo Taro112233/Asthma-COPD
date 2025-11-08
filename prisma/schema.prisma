@@ -13,28 +13,26 @@ datasource db {
 
 // ============================================
 // PATIENT MODEL
-// ข้อมูลผู้ป่วย - บันทึกครั้งเดียวต่อ HN
+// ข้อมูลผู้ป่วย - ใช้ HN เป็น Primary Key เพียงอย่างเดียว
 // ============================================
 model Patient {
-  id              String       @id @default(cuid())
-  hospitalNumber  String       @unique // HN - unique identifier
-  firstName       String       // ชื่อ
-  lastName        String       // นามสกุล
+  hospitalNumber  String       @id // HN - Primary Key (บังคับกรอก)
+  firstName       String?      // ชื่อ (optional)
+  lastName        String?      // นามสกุล (optional)
   nickname        String?      // ชื่อเล่น (เฉพาะเด็ก)
   dateOfBirth     DateTime?    // วันเกิด (สำหรับคำนวณอายุ)
-  height          Decimal?     @db.Decimal(5,2) // ส่วนสูง (cm)
-  patientType     PatientType  // ADULT or CHILD
+  age             Int?         // อายุ (ปี)
+  patientType     PatientType? // ADULT or CHILD (optional)
   
   // Metadata
   createdAt       DateTime     @default(now())
-  createdBy       String       // Username from cookie
+  createdBy       String?      // Username from cookie (optional)
   updatedAt       DateTime     @updatedAt
   
   // Relations
   assessments     Assessment[]
   
   // Indexes for performance
-  @@index([hospitalNumber])
   @@index([patientType])
   @@index([createdAt])
   
@@ -47,13 +45,13 @@ model Patient {
 // ============================================
 model Assessment {
   id                    String             @id @default(cuid())
-  patientId             String
-  patient               Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  hospitalNumber        String             // HN (Foreign Key)
+  patient               Patient            @relation(fields: [hospitalNumber], references: [hospitalNumber], onDelete: Cascade)
   
   // ========== META INFORMATION ==========
-  assessmentRound       AssessmentRound?   // PRE_COUNSELING | POST_COUNSELING (ผู้ใหญ่เท่านั้น, nullable สำหรับเด็ก)
-  assessmentDate        DateTime           // วันที่ประเมิน
-  assessedBy            String             // Username from cookie (ผู้ประเมิน)
+  assessmentRound       AssessmentRound?   // PRE_COUNSELING | POST_COUNSELING (optional)
+  assessmentDate        DateTime?          // วันที่ประเมิน (optional)
+  assessedBy            String?            // Username from cookie (optional)
   
   // ========== HEADER SECTION (ADULT-SPECIFIC) ==========
   alcohol               Boolean?           // ดื่มแอลกอฮอล์
@@ -61,69 +59,74 @@ model Assessment {
   smoking               Boolean?           // สูบบุหรี่
   smokingAmount         String?            // ปริมาณบุหรี่ (ถ้ามี)
   
-  // ========== HEADER SECTION (CHILD-SPECIFIC) ==========
-  accompaniedBy         String?            // มาโรงพยาบาลกับ... (เด็ก)
-  age                   Int?               // อายุ (ปี) - เด็ก
-  predictedPEF          String?            // Predicted PEF - เด็ก
-  
   // ========== DIAGNOSIS SECTION ==========
-  primaryDiagnosis      Diagnosis          // โรคหลัก (เลือกได้ 1)
+  primaryDiagnosis      Diagnosis?         // โรคหลัก (optional)
   secondaryDiagnoses    Diagnosis[]        // โรคแนบเพิ่มเติม (array, ถ้ามีหลายโรค)
-  note                  String?            @db.Text // Note/Risk factor (ผู้ใหญ่)
-  
-  // ========== RISK FACTORS (CHILD ONLY) ==========
-  // JSON Structure: { weather: boolean, ar: boolean, dust: boolean, doll: boolean, 
-  //                   smoking: boolean, smoker: string, obesity: boolean }
-  riskFactors           Json?
+  note                  String?            @db.Text // Note/Risk factor
   
   // ========== DISEASE-SPECIFIC DATA (JSON) ==========
-  // asthmaData: { pef, pefPercent, limitedActivity/limitedActivityUnder5/limitedActivity6to11, controlLevel }
+  // asthmaData: { pef, pefPercent, day, night, rescue, er, admit, controlLevel }
   asthmaData            Json?
   
-  // copdData: { mMRC, cat, exacerbPerYear, fev1, sixMWD, stage, abStatus, symptoms }
+  // copdData: { mMRC, cat, exacerbPerYear, fev1, sixMWD, stage }
   copdData              Json?
   
   // arData: { symptoms, severity, pattern }
   arData                Json?
   
   // ========== COMPLIANCE SECTION ==========
-  compliancePercent     Int                // เปอร์เซ็นต์การใช้ยา (0-100%)
-  complianceStatus      ComplianceStatus   // สถานะการใช้ยา
-  cannotAssessReason    String?            @db.Text // เหตุผลที่ประเมินไม่ได้ (ถ้า status = CANNOT_ASSESS)
-  nonComplianceReasons  String[]           // Array of reason codes (ถ้า status = NON_COMPLIANCE)
+  complianceStatus      ComplianceStatus?  // สถานะการใช้ยา (optional)
+  compliancePercent     Int?               // เปอร์เซ็นต์การใช้ยา (0-100%, optional)
+  cannotAssessReason    String?            @db.Text // เหตุผลที่ประเมินไม่ได้
+  
+  // ========== NON-COMPLIANCE REASONS ==========
+  // Array of reason codes: INCORRECT_TECHNIQUE, INCORRECT_DOSAGE, LESS_THAN, MORE_THAN, 
+  //                        LACK_KNOWLEDGE, NOT_READ_LABEL, ELDERLY, FORGET, FEAR_SIDE_EFFECTS
+  nonComplianceReasons  String[]           @default([])
+  lessThanDetail        String?            @db.Text // รายละเอียดถ้าเลือก "น้อยกว่า"
+  moreThanDetail        String?            @db.Text // รายละเอียดถ้าเลือก "มากกว่า"
   nonComplianceOther    String?            @db.Text // เหตุผลอื่น ๆ
   
   // ========== SIDE EFFECTS SECTION ==========
-  hasSideEffects        Boolean            // มีผลข้างเคียง
-  sideEffects           String[]           // Array: ["ORAL_CANDIDIASIS", "HOARSE_VOICE", "PALPITATION", "OTHER"]
+  hasSideEffects        Boolean?           // มีผลข้างเคียง (optional)
+  sideEffects           String[]           @default([]) // Array: ["ORAL_CANDIDIASIS", "HOARSE_VOICE", "PALPITATION"]
   sideEffectsOther      String?            // ผลข้างเคียงอื่น ๆ (ระบุ)
-  sideEffectsManagement String?            @db.Text // การจัดการผลข้างเคียง (ผู้ใหญ่)
+  sideEffectsManagement String?            @db.Text // การจัดการผลข้างเคียง
   
   // ========== CLINICAL ASSESSMENT ==========
   drps                  String?            @db.Text // Drug Related Problems
-  medicationStatus      MedicationStatus   // สถานะยาคงเหลือ
+  
+  // ========== MEDICATION STATUS ==========
+  medicationStatus      MedicationStatus?  // สถานะยาคงเหลือ (optional)
   unopenedMedication    Boolean?           // เหลือยาที่ยังไม่เปิดกล่อง
   
   // ========== INHALER TECHNIQUE SECTION ==========
-  techniqueCorrect      Boolean            // เทคนิคการพ่นยาถูกต้อง
-  inhalerDevices        String[]           // Array: ["MDI", "TURBO", "ACCU", "NS", "HAND", "ELLIPTA", "SPIOLTO"]
+  techniqueCorrect      Boolean?           // เทคนิคการพ่นยาถูกต้อง (optional)
+  inhalerDevices        String[]           @default([]) // Array: ["MDI", "TURBO", "ACCU", "NS", "HAND", "ELLIPTA", "SPIOLTO"]
   
-  // JSON Structure: { prepare: {MDI: {checked, note}, TURBO: {...}, ...}, inhale: {...}, rinse: {...}, empty: {...} }
-  techniqueSteps        Json               // Matrix 4 steps x 7 devices
+  // JSON Structure: { 
+  //   prepare: { MDI: {status: 'correct'|'incorrect'|'none', note: ''}, TURBO: {...}, ... }, 
+  //   inhale: {...}, 
+  //   rinse: {...}, 
+  //   empty: {...} 
+  // }
+  techniqueSteps        Json?              // Matrix 4 steps x 7 devices
   
   spacerType            String?            // "MOUTH_PIECE" | "VOLUMETRIC" | "CONE" | "NONE"
-  whoAdministers        String?            // เด็ก: "PARENT" | "PATIENT" | "RELATIVE" (ผู้ให้ยา)
   
   // ========== MEDICATIONS SECTION ==========
-  // JSON Array: [{ code: string, name: string, quantity: number, custom?: string }, ...]
-  medications           Json               // รายการยาที่จ่าย
+  // JSON Array: [
+  //   { id: string, name: string, quantity: number }, 
+  //   ...
+  // ]
+  medications           Json?              // รายการยาที่จ่าย
   
   // ========== METADATA ==========
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   
   // Indexes for performance
-  @@index([patientId, assessmentDate])
+  @@index([hospitalNumber, assessmentDate])
   @@index([assessmentDate])
   @@index([primaryDiagnosis])
   @@index([complianceStatus])
@@ -170,6 +173,6 @@ enum ComplianceStatus {
 
 // Medication Status (remaining meds)
 enum MedicationStatus {
-  HAS_REMAINING  // ไม่เหลือยา
-  NO_REMAINING   // เหลือยา
+  NO_REMAINING   // ไม่เหลือยา
+  HAS_REMAINING  // เหลือยา
 }

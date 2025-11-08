@@ -3,24 +3,26 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Plus, X } from 'lucide-react';
+import { useState } from 'react';
+
+interface MedicationItem {
+  id: string;
+  name: string;
+  quantity: number;
+}
 
 interface MedicationsData {
   medicationStatus: 'NO_REMAINING' | 'HAS_REMAINING' | '';
-  budesonide: string;
-  seretide25_125: string;
-  seretide50_250: string;
-  seretideAccu: string;
-  symbicort160: string;
-  symbicort320: string;
-  ventolinMDI: string;
-  berodualMDI: string;
-  avamysNS: string;
-  theophylline: string;
-  montelukast: string;
-  spirivaHand: string;
-  ellipta: string;
-  spiolto: string;
-  other: string;
+  items: MedicationItem[];
 }
 
 interface MedicationsSectionProps {
@@ -28,26 +30,66 @@ interface MedicationsSectionProps {
   onMedicationsChange: (data: Partial<MedicationsData>) => void;
 }
 
-const MEDICATION_LIST = [
-  { key: 'budesonide', label: 'Budesonide' },
-  { key: 'seretide25_125', label: 'Seretide 25/125' },
-  { key: 'seretide50_250', label: 'Seretide 50/250' },
-  { key: 'seretideAccu', label: 'Seretide Accu' },
-  { key: 'symbicort160', label: 'Symbicort 160' },
-  { key: 'symbicort320', label: 'Symbicort 320' },
-  { key: 'ventolinMDI', label: 'Ventolin MDI' },
-  { key: 'berodualMDI', label: 'Berodual MDI' },
-  { key: 'avamysNS', label: 'Avamys NS' },
-  { key: 'theophylline', label: 'Theophylline' },
-  { key: 'montelukast', label: 'Montelukast' },
-  { key: 'spirivaHand', label: 'Spiriva Hand' },
-  { key: 'ellipta', label: 'Ellipta' },
-  { key: 'spiolto', label: 'Spiolto' },
+const MEDICATION_OPTIONS = [
+  { value: 'budesonide', label: 'Budesonide' },
+  { value: 'seretide25_125', label: 'Seretide 25/125' },
+  { value: 'seretide50_250', label: 'Seretide 50/250' },
+  { value: 'seretideAccu', label: 'Seretide Accu' },
+  { value: 'symbicort160', label: 'Symbicort 160' },
+  { value: 'symbicort320', label: 'Symbicort 320' },
+  { value: 'ventolinMDI', label: 'Ventolin MDI' },
+  { value: 'berodualMDI', label: 'Berodual MDI' },
+  { value: 'avamysNS', label: 'Avamys NS' },
+  { value: 'theophylline', label: 'Theophylline' },
+  { value: 'montelukast', label: 'Montelukast' },
+  { value: 'spirivaHand', label: 'Spiriva Hand' },
+  { value: 'ellipta', label: 'Ellipta' },
+  { value: 'spiolto', label: 'Spiolto' },
+  { value: 'other', label: 'อื่น ๆ (ระบุ)' },
 ];
 
 export function MedicationsSection({ medications, onMedicationsChange }: MedicationsSectionProps) {
+  const [selectedMed, setSelectedMed] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [customName, setCustomName] = useState('');
+
+  const handleAddMedication = () => {
+    if (!selectedMed) {
+      return;
+    }
+
+    const medName = selectedMed === 'other' 
+      ? customName 
+      : MEDICATION_OPTIONS.find(opt => opt.value === selectedMed)?.label || '';
+
+    if (!medName || !quantity || parseInt(quantity) <= 0) {
+      return;
+    }
+
+    const newItem: MedicationItem = {
+      id: Date.now().toString(),
+      name: medName,
+      quantity: parseInt(quantity)
+    };
+
+    onMedicationsChange({
+      items: [...(medications.items || []), newItem]
+    });
+
+    // Reset form
+    setSelectedMed('');
+    setQuantity('');
+    setCustomName('');
+  };
+
+  const handleRemoveMedication = (id: string) => {
+    onMedicationsChange({
+      items: medications.items.filter(item => item.id !== id)
+    });
+  };
+
   return (
-    <Card className="col-span-2 row-span-2 col-start-3 row-start-7 p-2 h-full">
+    <Card className="col-span-2 row-span-2 col-start-3 row-start-6 p-2 h-full">
       <div className="space-y-1">
         <div className="flex gap-4">
           <Label className="text-xs font-semibold mb-0.5 block">จำนวนยาเหลือ</Label>
@@ -72,30 +114,74 @@ export function MedicationsSection({ medications, onMedicationsChange }: Medicat
             <Label htmlFor="has-remain" className="text-xs">เหลือยาที่ยังไม่เปิดกล่อง</Label>
           </div>
         </div>
-        
-        <div className="grid grid-cols-3 gap-x-2 gap-y-1">
-          {MEDICATION_LIST.map(({ key, label }) => (
-            <div key={key} className="flex items-center gap-1">
-              <Label className="text-xs w-24 truncate" title={label}>{label}</Label>
+
+        {/* Add Medication Form */}
+        <div className="flex gap-1 items-start">
+          <div className="flex-1">
+            <Select value={selectedMed} onValueChange={setSelectedMed}>
+              <SelectTrigger className="h-6 text-xs">
+                <SelectValue placeholder="เลือกยา..." />
+              </SelectTrigger>
+              <SelectContent>
+                {MEDICATION_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value} className="text-xs">
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Custom medication name input */}
+            {selectedMed === 'other' && (
               <Input
-                type="number"
-                value={medications[key as keyof MedicationsData]}
-                onChange={(e) => onMedicationsChange({ [key]: e.target.value })}
-                className="h-6 text-xs w-14"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="ระบุชื่อยา"
+                className="h-6 text-xs mt-1"
               />
-            </div>
-          ))}
-          
-          {/* อื่น ๆ อยู่ในชอย์สุดท้ายของ grid */}
-          <div className="flex items-center gap-1">
-            <Label className="text-xs w-24">อื่น ๆ</Label>
-            <Input
-              value={medications.other}
-              onChange={(e) => onMedicationsChange({ other: e.target.value })}
-              className="h-6 text-xs w-14"
-            />
+            )}
           </div>
+
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="จำนวน"
+            className="h-6 text-xs w-16"
+            min="1"
+          />
+
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleAddMedication}
+            className="h-6 px-2"
+            disabled={!selectedMed || !quantity}
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
         </div>
+
+        {/* Medication Tags */}
+        {medications.items && medications.items.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-1">
+            {medications.items.map((item) => (
+              <div
+                key={item.id}
+                className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs"
+              >
+                <span className="font-medium">{item.name}</span>
+                <span className="text-blue-600">×{item.quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMedication(item.id)}
+                  className="ml-1 hover:bg-blue-200 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card>
   );
