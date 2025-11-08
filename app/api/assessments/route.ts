@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         AND: [
           search ? {
             OR: [
-              { hospitalNumber: { contains: search, mode: 'insensitive' } },
+              { patient: { hospitalNumber: { contains: search, mode: 'insensitive' } } },
               { patient: { firstName: { contains: search, mode: 'insensitive' } } },
               { patient: { lastName: { contains: search, mode: 'insensitive' } } }
             ]
@@ -28,13 +28,12 @@ export async function GET(request: NextRequest) {
             hospitalNumber: true,
             firstName: true,
             lastName: true,
-            age: true,
             patientType: true,
           }
         }
       },
       orderBy: { assessmentDate: 'desc' },
-      take: 100, // Limit results
+      take: 100,
     });
 
     return NextResponse.json(assessments);
@@ -72,7 +71,6 @@ export async function POST(request: NextRequest) {
       update: {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
-        age: data.age ? parseInt(data.age) : null,
         patientType: data.patientType || null,
         updatedAt: new Date(),
       },
@@ -80,7 +78,6 @@ export async function POST(request: NextRequest) {
         hospitalNumber: data.hospitalNumber,
         firstName: data.firstName || null,
         lastName: data.lastName || null,
-        age: data.age ? parseInt(data.age) : null,
         patientType: data.patientType || null,
         createdBy: username,
       }
@@ -89,7 +86,9 @@ export async function POST(request: NextRequest) {
     // Create assessment
     const assessment = await prisma.assessment.create({
       data: {
-        hospitalNumber: data.hospitalNumber,
+        patient: {
+          connect: { hospitalNumber: data.hospitalNumber }
+        },
         assessmentRound: data.assessmentRound || null,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
         assessedBy: username,
