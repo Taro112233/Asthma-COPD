@@ -5,11 +5,13 @@ import { prisma } from '@/lib/db';
 // GET - Get single assessment by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const assessment = await prisma.assessment.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         patient: true
       }
@@ -35,13 +37,14 @@ export async function GET(
 // PATCH - Update assessment
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const data = await request.json();
 
     const assessment = await prisma.assessment.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         assessmentRound: data.assessmentRound || undefined,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : undefined,
@@ -53,7 +56,7 @@ export async function PATCH(
         smokingAmount: data.smokingAmount,
         
         // Diagnosis
-        primaryDiagnosis: data.primaryDiagnosis,
+        primaryDiagnosis: data.primaryDiagnosis || undefined,
         secondaryDiagnoses: data.secondaryDiagnoses,
         note: data.note,
         
@@ -63,7 +66,7 @@ export async function PATCH(
         arData: data.arData,
         
         // Compliance
-        complianceStatus: data.complianceStatus,
+        complianceStatus: data.complianceStatus || undefined,
         compliancePercent: data.compliancePercent,
         cannotAssessReason: data.cannotAssessReason,
         
@@ -83,7 +86,7 @@ export async function PATCH(
         drps: data.drps,
         
         // Medication status
-        medicationStatus: data.medicationStatus,
+        medicationStatus: data.medicationStatus || undefined,
         unopenedMedication: data.unopenedMedication,
         
         // Inhaler technique
@@ -115,11 +118,13 @@ export async function PATCH(
 // DELETE - Delete assessment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     await prisma.assessment.delete({
-      where: { id: params.id }
+      where: { id }
     });
 
     return NextResponse.json({ success: true, message: 'ลบข้อมูลสำเร็จ' });

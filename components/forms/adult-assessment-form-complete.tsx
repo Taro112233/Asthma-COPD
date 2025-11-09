@@ -126,11 +126,9 @@ interface PatientVisit {
 }
 
 interface PatientData {
-  id: string;
   hospitalNumber: string;
   firstName: string;
   lastName: string;
-  height: string | null;
   assessments: PatientVisit[];
 }
 
@@ -139,6 +137,7 @@ export function AdultAssessmentFormComplete() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [username, setUsername] = useState('');
+  const [assessedBy, setAssessedBy] = useState('');
   const [searchHN, setSearchHN] = useState('');
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [selectedVisitId, setSelectedVisitId] = useState<string>('');
@@ -257,15 +256,16 @@ export function AdultAssessmentFormComplete() {
           hospitalNumber: patient.hospitalNumber,
           firstName: patient.firstName || '',
           lastName: patient.lastName || '',
-          age: patient.height || '',
         }));
         setSelectedVisitId('');
         setIsEditMode(false);
+        setAssessedBy('');
         toast.success(`พบข้อมูลผู้ป่วย: ${patient.firstName} ${patient.lastName} (${patient.assessments.length} visits)`);
       } else {
         setPatientData(null);
         setSelectedVisitId('');
         setIsEditMode(false);
+        setAssessedBy('');
         toast.info('ไม่พบข้อมูลผู้ป่วย จะสร้างข้อมูลใหม่');
       }
     } catch (error) {
@@ -281,6 +281,7 @@ export function AdultAssessmentFormComplete() {
       // Reset to new visit mode
       setIsEditMode(false);
       setSelectedVisitId('new');
+      setAssessedBy('');
       setFormData(prev => ({
         ...prev,
         assessmentDate: new Date().toISOString().split('T')[0],
@@ -369,13 +370,15 @@ export function AdultAssessmentFormComplete() {
         const assessment = await res.json();
         
         setIsEditMode(true);
+        setAssessedBy(assessment.assessedBy || 'ไม่ระบุ');
+        
         setFormData({
           assessmentDate: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           assessmentRound: assessment.assessmentRound || '',
           hospitalNumber: assessment.patient.hospitalNumber || '',
           firstName: assessment.patient.firstName || '',
           lastName: assessment.patient.lastName || '',
-          age: assessment.patient.height || '',
+          age: '',
           alcohol: assessment.alcohol === true ? 'YES' : assessment.alcohol === false ? 'NO' : '',
           alcoholAmount: assessment.alcoholAmount || '',
           smoking: assessment.smoking === true ? 'YES' : assessment.smoking === false ? 'NO' : '',
@@ -478,7 +481,6 @@ export function AdultAssessmentFormComplete() {
           ...prev,
           firstName: patient.firstName || '',
           lastName: patient.lastName || '',
-          age: patient.height || '',
         }));
         toast.success('พบข้อมูลผู้ป่วย');
       } else {
@@ -507,13 +509,13 @@ export function AdultAssessmentFormComplete() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         patientType: 'ADULT',
-        assessmentRound: formData.assessmentRound,
+        assessmentRound: formData.assessmentRound || null,
         assessmentDate: formData.assessmentDate,
         alcohol: formData.alcohol === 'YES',
         alcoholAmount: formData.alcoholAmount || null,
         smoking: formData.smoking === 'YES',
         smokingAmount: formData.smokingAmount || null,
-        primaryDiagnosis: formData.primaryDiagnosis,
+        primaryDiagnosis: formData.primaryDiagnosis || null,
         secondaryDiagnoses: [],
         note: formData.note || null,
         asthmaData: {
@@ -539,7 +541,7 @@ export function AdultAssessmentFormComplete() {
           severity: formData.ar.severity || null,
           pattern: formData.ar.pattern || null,
         },
-        complianceStatus: formData.compliance.complianceStatus,
+        complianceStatus: formData.compliance.complianceStatus || null,
         compliancePercent: parseInt(formData.compliance.compliancePercent) || 0,
         cannotAssessReason: formData.compliance.cannotAssessReason || null,
         nonComplianceReasons: [
@@ -565,7 +567,7 @@ export function AdultAssessmentFormComplete() {
         sideEffectsOther: formData.sideEffects.other || null,
         sideEffectsManagement: formData.sideEffects.management || null,
         drps: formData.drps || null,
-        medicationStatus: formData.medications.medicationStatus,
+        medicationStatus: formData.medications.medicationStatus || null,
         unopenedMedication: formData.medications.medicationStatus === 'HAS_REMAINING',
         techniqueCorrect: formData.technique.techniqueCorrect,
         inhalerDevices: Object.keys(formData.technique.techniqueSteps.prepare || {}).filter(
@@ -625,7 +627,9 @@ export function AdultAssessmentFormComplete() {
                 แบบบันทึกการติดตามดูแลผู้ป่วย Asthma/COPD
                 {isEditMode && <span className="text-sm text-orange-600 ml-2">(กำลังแก้ไข)</span>}
               </h1>
-              <p className="text-sm text-gray-600">ผู้บันทึก: {username}</p>
+              <p className="text-sm text-gray-600">
+                ผู้บันทึก: {isEditMode && assessedBy ? assessedBy : username}
+              </p>
             </div>
             <div className="flex gap-2 items-center">
               {/* Visit Selection */}
@@ -845,29 +849,39 @@ export function AdultAssessmentFormComplete() {
         {/* Fixed Footer */}
         <div className="sticky bottom-0 bg-white border-t shadow-lg mt-6">
           <div className="container mx-auto px-4 py-4">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
-                    window.location.reload();
-                  }
-                }}
-                disabled={isLoading}
-              >
-                ล้างข้อมูล
-              </Button>
-              <Button type="submit" disabled={isLoading} size="lg">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? 'กำลังแก้ไข...' : 'กำลังบันทึก...'}
-                  </>
-                ) : (
-                  isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'
-                )}
-              </Button>
+            <div className="max-w-7xl mx-auto">
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
+                        window.location.reload();
+                      }
+                    }}
+                    disabled={isLoading}
+                  >
+                    ล้างข้อมูล
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    {isEditMode 
+                      ? `แก้ไขโดย: ${username}` 
+                      : `บันทึกในชื่อ: ${username}`
+                    }
+                  </p>
+                </div>
+                <Button type="submit" disabled={isLoading} size="lg">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isEditMode ? 'กำลังแก้ไข...' : 'กำลังบันทึก...'}
+                    </>
+                  ) : (
+                    isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
