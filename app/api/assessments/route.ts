@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create or update patient (upsert)
+    // Create or update patient (upsert) - เพิ่มการอัปเดต age
     await prisma.patient.upsert({
       where: { hospitalNumber: data.hospitalNumber },
       update: {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
+        age: data.age || null, // เพิ่มการอัปเดต age
         patientType: data.patientType || null,
         updatedAt: new Date(),
       },
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         hospitalNumber: data.hospitalNumber,
         firstName: data.firstName || null,
         lastName: data.lastName || null,
+        age: data.age || null, // เพิ่มการสร้าง age
         patientType: data.patientType || null,
         createdBy: username,
       }
@@ -86,9 +88,7 @@ export async function POST(request: NextRequest) {
     // Create assessment
     const assessment = await prisma.assessment.create({
       data: {
-        patient: {
-          connect: { hospitalNumber: data.hospitalNumber }
-        },
+        hospitalNumber: data.hospitalNumber,
         assessmentRound: data.assessmentRound || null,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
         assessedBy: username,

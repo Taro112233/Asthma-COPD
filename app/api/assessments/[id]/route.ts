@@ -43,6 +43,31 @@ export async function PATCH(
     const { id } = await params;
     const data = await request.json();
 
+    // ดึงข้อมูล assessment เดิมเพื่อเอา hospitalNumber
+    const existingAssessment = await prisma.assessment.findUnique({
+      where: { id },
+      select: { hospitalNumber: true }
+    });
+
+    if (!existingAssessment) {
+      return NextResponse.json(
+        { error: 'ไม่พบข้อมูลการประเมิน' },
+        { status: 404 }
+      );
+    }
+
+    // อัปเดตข้อมูล patient ก่อน (ยกเว้น HN)
+    await prisma.patient.update({
+      where: { hospitalNumber: existingAssessment.hospitalNumber },
+      data: {
+        firstName: data.firstName || undefined,
+        lastName: data.lastName || undefined,
+        age: data.age || undefined, // เพิ่มการอัปเดต age
+        updatedAt: new Date(),
+      }
+    });
+
+    // จากนั้นค่อยอัปเดต assessment
     const assessment = await prisma.assessment.update({
       where: { id },
       data: {

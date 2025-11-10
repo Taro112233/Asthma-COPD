@@ -129,6 +129,7 @@ interface PatientData {
   hospitalNumber: string;
   firstName: string;
   lastName: string;
+  age: number | null;
   assessments: PatientVisit[];
 }
 
@@ -281,6 +282,7 @@ export function AdultAssessmentFormComplete() {
         newFormData.hospitalNumber = patient.hospitalNumber;
         newFormData.firstName = patient.firstName || '';
         newFormData.lastName = patient.lastName || '';
+        newFormData.age = patient.age?.toString() || '';
         setFormData(newFormData);
         
         setSelectedVisitId('');
@@ -314,6 +316,7 @@ export function AdultAssessmentFormComplete() {
         newFormData.hospitalNumber = patientData.hospitalNumber;
         newFormData.firstName = patientData.firstName || '';
         newFormData.lastName = patientData.lastName || '';
+        newFormData.age = patientData.age?.toString() || '';
       }
       setFormData(newFormData);
       return;
@@ -334,7 +337,7 @@ export function AdultAssessmentFormComplete() {
           hospitalNumber: assessment.patient.hospitalNumber || '',
           firstName: assessment.patient.firstName || '',
           lastName: assessment.patient.lastName || '',
-          age: '',
+          age: assessment.patient.age?.toString() || '',
           alcohol: assessment.alcohol === true ? 'YES' : assessment.alcohol === false ? 'NO' : '',
           alcoholAmount: assessment.alcoholAmount || '',
           smoking: assessment.smoking === true ? 'YES' : assessment.smoking === false ? 'NO' : '',
@@ -437,6 +440,7 @@ export function AdultAssessmentFormComplete() {
           ...prev,
           firstName: patient.firstName || '',
           lastName: patient.lastName || '',
+          age: patient.age?.toString() || '',
         }));
         toast.success('พบข้อมูลผู้ป่วย');
       } else {
@@ -464,6 +468,7 @@ export function AdultAssessmentFormComplete() {
         hospitalNumber: formData.hospitalNumber,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        age: formData.age ? parseInt(formData.age) : null,
         patientType: 'ADULT',
         assessmentRound: formData.assessmentRound || null,
         assessmentDate: formData.assessmentDate,
