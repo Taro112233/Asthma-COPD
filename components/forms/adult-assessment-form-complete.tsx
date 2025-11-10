@@ -727,14 +727,14 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            <div className="col-span-2 col-start-3 row-start-6">
+            <div className="col-span-1 col-start-4 row-start-6">
               <DRPsSection
                 drps={formData.drps}
                 onDRPsChange={(value) => setFormData(prev => ({ ...prev, drps: value }))}
               />
             </div>
 
-            <div className="col-span-2 row-span-2 row-start-6">
+            <div className="col-span-3 row-span-2 row-start-6">
               <InhalerTechniqueSection
                 technique={formData.technique}
                 onTechniqueChange={(data) => setFormData(prev => ({ 
@@ -744,7 +744,7 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            <div className="col-span-2 row-span-2 col-start-3 row-start-7">
+            <div className="col-span-1 row-span-2 col-start-4 row-start-7">
               <MedicationsSection
                 medications={formData.medications}
                 onMedicationsChange={(data) => setFormData(prev => ({ 
