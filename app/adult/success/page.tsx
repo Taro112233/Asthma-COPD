@@ -10,8 +10,8 @@ export default function AdultSuccessPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="min-h-screen flex items-center justify-center from-blue-50 to-white px-4">
+      <Card className="w-full max-w-md shadow-lg space-y-3">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="bg-green-100 p-4 rounded-full">

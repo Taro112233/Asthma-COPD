@@ -89,7 +89,7 @@ export function MedicationsSection({ medications, onMedicationsChange }: Medicat
   };
 
   return (
-    <Card className="col-span-2 row-span-2 col-start-3 row-start-6 p-2 h-full">
+    <Card className="col-span-2 row-span-2 col-start-3 row-start-6 p-2">
       <div className="space-y-1">
         <div className="flex gap-4">
           <Label className="text-xs font-semibold mb-0.5 block">จำนวนยาเหลือ</Label>

@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     };
 
+    console.log('Setting auth cookie with data:', authData); // Debug log
+
     // Create response with success
     const response = NextResponse.json({ 
       success: true,
@@ -42,6 +44,8 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 8, // 8 hours
       path: '/',
     });
+
+    console.log('Cookie set successfully'); // Debug log
 
     return response;
   } catch (error) {

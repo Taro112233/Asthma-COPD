@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Home, Search } from 'lucide-react';
+import { Loader2, Home, Search, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -132,112 +132,137 @@ interface PatientData {
   assessments: PatientVisit[];
 }
 
+const getInitialFormData = (): FormData => ({
+  assessmentDate: new Date().toISOString().split('T')[0],
+  assessmentRound: '',
+  hospitalNumber: '',
+  firstName: '',
+  lastName: '',
+  age: '',
+  alcohol: '',
+  alcoholAmount: '',
+  smoking: '',
+  smokingAmount: '',
+  primaryDiagnosis: '',
+  note: '',
+  asthma: {
+    pef: '',
+    pefPercent: '',
+    day: '',
+    night: '',
+    rescue: '',
+    er: '',
+    admit: '',
+    controlLevel: '',
+  },
+  copd: {
+    mMRC: '',
+    cat: '',
+    exacerbPerYear: '',
+    fev1: '',
+    sixMWD: '',
+    stage: '',
+  },
+  ar: {
+    symptoms: '',
+    severity: '',
+    pattern: '',
+  },
+  compliance: {
+    complianceStatus: '',
+    cannotAssessReason: '',
+    compliancePercent: '',
+    nonComplianceReasons: {
+      incorrectTechnique: false,
+      incorrectDosage: false,
+    },
+  },
+  technique: {
+    techniqueCorrect: false,
+    techniqueSteps: {
+      prepare: {},
+      inhale: {},
+      rinse: {},
+      empty: {},
+    },
+    spacerType: '',
+  },
+  nonComplianceReasons: {
+    lessThan: false,
+    lessThanDetail: '',
+    moreThan: false,
+    moreThanDetail: '',
+    lackKnowledge: false,
+    notReadLabel: false,
+    elderly: false,
+    forget: false,
+    fearSideEffects: false,
+    other: '',
+  },
+  drps: '',
+  sideEffects: {
+    hasSideEffects: false,
+    oralCandidiasis: false,
+    hoarseVoice: false,
+    palpitation: false,
+    other: '',
+    management: '',
+  },
+  medications: {
+    medicationStatus: '',
+    items: [],
+  },
+});
+
 export function AdultAssessmentFormComplete() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [username, setUsername] = useState('');
-  const [assessedBy, setAssessedBy] = useState('');
+  const [currentUsername, setCurrentUsername] = useState('User');
+  const [originalAssessedBy, setOriginalAssessedBy] = useState('');
   const [searchHN, setSearchHN] = useState('');
   const [patientData, setPatientData] = useState<PatientData | null>(null);
   const [selectedVisitId, setSelectedVisitId] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState(false);
   
-  const [formData, setFormData] = useState<FormData>({
-    assessmentDate: new Date().toISOString().split('T')[0],
-    assessmentRound: '',
-    hospitalNumber: '',
-    firstName: '',
-    lastName: '',
-    age: '',
-    alcohol: '',
-    alcoholAmount: '',
-    smoking: '',
-    smokingAmount: '',
-    primaryDiagnosis: '',
-    note: '',
-    asthma: {
-      pef: '',
-      pefPercent: '',
-      day: '',
-      night: '',
-      rescue: '',
-      er: '',
-      admit: '',
-      controlLevel: '',
-    },
-    copd: {
-      mMRC: '',
-      cat: '',
-      exacerbPerYear: '',
-      fev1: '',
-      sixMWD: '',
-      stage: '',
-    },
-    ar: {
-      symptoms: '',
-      severity: '',
-      pattern: '',
-    },
-    compliance: {
-      complianceStatus: '',
-      cannotAssessReason: '',
-      compliancePercent: '',
-      nonComplianceReasons: {
-        incorrectTechnique: false,
-        incorrectDosage: false,
-      },
-    },
-    technique: {
-      techniqueCorrect: false,
-      techniqueSteps: {
-        prepare: {},
-        inhale: {},
-        rinse: {},
-        empty: {},
-      },
-      spacerType: '',
-    },
-    nonComplianceReasons: {
-      lessThan: false,
-      lessThanDetail: '',
-      moreThan: false,
-      moreThanDetail: '',
-      lackKnowledge: false,
-      notReadLabel: false,
-      elderly: false,
-      forget: false,
-      fearSideEffects: false,
-      other: '',
-    },
-    drps: '',
-    sideEffects: {
-      hasSideEffects: false,
-      oralCandidiasis: false,
-      hoarseVoice: false,
-      palpitation: false,
-      other: '',
-      management: '',
-    },
-    medications: {
-      medicationStatus: '',
-      items: [],
-    },
-  });
+  const [formData, setFormData] = useState<FormData>(getInitialFormData());
 
+  // Get username from cookie - พร้อม DEBUG
   useEffect(() => {
+    // DEBUG: แสดง cookie ทั้งหมด
+    console.log('=== DEBUG COOKIE START ===');
+    console.log('All cookies:', document.cookie);
+    
     const cookies = document.cookie.split(';');
+    console.log('Cookies array:', cookies);
+    
     const authCookie = cookies.find(c => c.trim().startsWith('auth='));
+    console.log('Auth cookie found:', authCookie);
+    
     if (authCookie) {
       try {
         const authValue = decodeURIComponent(authCookie.split('=')[1]);
+        console.log('Decoded auth value:', authValue);
+        
         const authData = JSON.parse(authValue);
-        setUsername(authData.username || 'Unknown');
+        console.log('Parsed auth data:', authData);
+        console.log('Username:', authData.username);
+        
+        setCurrentUsername(authData.username || 'User');
       } catch (error) {
-        console.error('Failed to parse auth cookie:', error);
+        console.error('❌ Failed to parse auth cookie:', error);
+        setCurrentUsername('User');
       }
+    } else {
+      console.warn('⚠️ No auth cookie found!');
     }
+    console.log('=== DEBUG COOKIE END ===');
   }, []);
+
+  const clearFormData = () => {
+    setFormData(getInitialFormData());
+    setOriginalAssessedBy('');
+  };
 
   const searchPatientByHN = async () => {
     if (!searchHN.trim()) {
@@ -251,21 +276,23 @@ export function AdultAssessmentFormComplete() {
       if (res.ok) {
         const patient: PatientData = await res.json();
         setPatientData(patient);
-        setFormData(prev => ({
-          ...prev,
-          hospitalNumber: patient.hospitalNumber,
-          firstName: patient.firstName || '',
-          lastName: patient.lastName || '',
-        }));
+        
+        const newFormData = getInitialFormData();
+        newFormData.hospitalNumber = patient.hospitalNumber;
+        newFormData.firstName = patient.firstName || '';
+        newFormData.lastName = patient.lastName || '';
+        setFormData(newFormData);
+        
         setSelectedVisitId('');
         setIsEditMode(false);
-        setAssessedBy('');
+        setOriginalAssessedBy('');
         toast.success(`พบข้อมูลผู้ป่วย: ${patient.firstName} ${patient.lastName} (${patient.assessments.length} visits)`);
       } else {
         setPatientData(null);
         setSelectedVisitId('');
         setIsEditMode(false);
-        setAssessedBy('');
+        setOriginalAssessedBy('');
+        clearFormData();
         toast.info('ไม่พบข้อมูลผู้ป่วย จะสร้างข้อมูลใหม่');
       }
     } catch (error) {
@@ -278,88 +305,17 @@ export function AdultAssessmentFormComplete() {
 
   const loadVisitData = async (visitId: string) => {
     if (!visitId || visitId === 'new') {
-      // Reset to new visit mode
       setIsEditMode(false);
       setSelectedVisitId('new');
-      setAssessedBy('');
-      setFormData(prev => ({
-        ...prev,
-        assessmentDate: new Date().toISOString().split('T')[0],
-        assessmentRound: '',
-        alcohol: '',
-        alcoholAmount: '',
-        smoking: '',
-        smokingAmount: '',
-        primaryDiagnosis: '',
-        note: '',
-        asthma: {
-          pef: '',
-          pefPercent: '',
-          day: '',
-          night: '',
-          rescue: '',
-          er: '',
-          admit: '',
-          controlLevel: '',
-        },
-        copd: {
-          mMRC: '',
-          cat: '',
-          exacerbPerYear: '',
-          fev1: '',
-          sixMWD: '',
-          stage: '',
-        },
-        ar: {
-          symptoms: '',
-          severity: '',
-          pattern: '',
-        },
-        compliance: {
-          complianceStatus: '',
-          cannotAssessReason: '',
-          compliancePercent: '',
-          nonComplianceReasons: {
-            incorrectTechnique: false,
-            incorrectDosage: false,
-          },
-        },
-        technique: {
-          techniqueCorrect: false,
-          techniqueSteps: {
-            prepare: {},
-            inhale: {},
-            rinse: {},
-            empty: {},
-          },
-          spacerType: '',
-        },
-        nonComplianceReasons: {
-          lessThan: false,
-          lessThanDetail: '',
-          moreThan: false,
-          moreThanDetail: '',
-          lackKnowledge: false,
-          notReadLabel: false,
-          elderly: false,
-          forget: false,
-          fearSideEffects: false,
-          other: '',
-        },
-        drps: '',
-        sideEffects: {
-          hasSideEffects: false,
-          oralCandidiasis: false,
-          hoarseVoice: false,
-          palpitation: false,
-          other: '',
-          management: '',
-        },
-        medications: {
-          medicationStatus: '',
-          items: [],
-        },
-      }));
+      setOriginalAssessedBy('');
+      
+      const newFormData = getInitialFormData();
+      if (patientData) {
+        newFormData.hospitalNumber = patientData.hospitalNumber;
+        newFormData.firstName = patientData.firstName || '';
+        newFormData.lastName = patientData.lastName || '';
+      }
+      setFormData(newFormData);
       return;
     }
 
@@ -370,7 +326,7 @@ export function AdultAssessmentFormComplete() {
         const assessment = await res.json();
         
         setIsEditMode(true);
-        setAssessedBy(assessment.assessedBy || 'ไม่ระบุ');
+        setOriginalAssessedBy(assessment.assessedBy || 'ไม่ระบุ');
         
         setFormData({
           assessmentDate: assessment.assessmentDate ? new Date(assessment.assessmentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -582,14 +538,12 @@ export function AdultAssessmentFormComplete() {
 
       let res;
       if (isEditMode && selectedVisitId && selectedVisitId !== 'new') {
-        // Update existing assessment
         res = await fetch(`/api/assessments/${selectedVisitId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(apiData),
         });
       } else {
-        // Create new assessment
         res = await fetch('/api/assessments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -627,12 +581,8 @@ export function AdultAssessmentFormComplete() {
                 แบบบันทึกการติดตามดูแลผู้ป่วย Asthma/COPD
                 {isEditMode && <span className="text-sm text-orange-600 ml-2">(กำลังแก้ไข)</span>}
               </h1>
-              <p className="text-sm text-gray-600">
-                ผู้บันทึก: {isEditMode && assessedBy ? assessedBy : username}
-              </p>
             </div>
             <div className="flex gap-2 items-center">
-              {/* Visit Selection */}
               {patientData && patientData.assessments.length > 0 && (
                 <Select
                   value={selectedVisitId}
@@ -652,14 +602,13 @@ export function AdultAssessmentFormComplete() {
                           day: '2-digit',
                           month: '2-digit',
                           year: 'numeric'
-                        })} - {visit.assessmentRound === 'PRE_COUNSELING' ? 'Pre' : 'Post'}
+                        })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
 
-              {/* Search HN */}
               <div className="flex gap-1 items-center">
                 <Input
                   value={searchHN}
@@ -703,7 +652,6 @@ export function AdultAssessmentFormComplete() {
       <form onSubmit={handleSubmit} className="container mx-auto px-4 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-4 gap-2">
-            {/* 1. โรคหลัก */}
             <div className="col-span-2">
               <PrimaryDiagnosisSection
                 primaryDiagnosis={formData.primaryDiagnosis}
@@ -711,7 +659,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 2. ข้อมูลผู้ป่วย */}
             <div className="col-span-2 row-span-2 col-start-3">
               <PatientInfoSection
                 hospitalNumber={formData.hospitalNumber}
@@ -735,7 +682,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 3. Note/Risk factor */}
             <div className="col-span-2 row-start-2">
               <RiskFactorSection
                 note={formData.note}
@@ -743,7 +689,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 4. Asthma */}
             <div className="row-span-2 row-start-3">
               <AsthmaSection
                 asthma={formData.asthma}
@@ -754,7 +699,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 5. COPD */}
             <div className="row-start-3">
               <COPDSection
                 copd={formData.copd}
@@ -765,7 +709,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 6. AR */}
             <div className="col-start-2 row-start-4">
               <ARSection
                 ar={formData.ar}
@@ -776,7 +719,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 7. เหตุผลที่ไม่ใช้ยาตามที่กำหนด */}
             <div className="col-span-2 row-span-2 col-start-3 row-start-3">
               <NonComplianceReasonsSection
                 reasons={formData.nonComplianceReasons}
@@ -792,7 +734,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 8. ผลข้างเคียงจากการใช้ยา */}
             <div className="col-span-2 col-start-3 row-start-5">
               <SideEffectsSection
                 sideEffects={formData.sideEffects}
@@ -803,7 +744,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 9. การใช้ยา */}
             <div className="col-span-2 row-start-5">
               <ComplianceSection
                 compliance={formData.compliance}
@@ -814,7 +754,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 10. DRPs */}
             <div className="col-span-2 col-start-3 row-start-6">
               <DRPsSection
                 drps={formData.drps}
@@ -822,7 +761,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 11. เทคนิคการพ่นยา */}
             <div className="col-span-2 row-span-2 row-start-6">
               <InhalerTechniqueSection
                 technique={formData.technique}
@@ -833,7 +771,6 @@ export function AdultAssessmentFormComplete() {
               />
             </div>
 
-            {/* 12. ยาเหลือ */}
             <div className="col-span-2 row-span-2 col-start-3 row-start-7">
               <MedicationsSection
                 medications={formData.medications}
@@ -851,36 +788,34 @@ export function AdultAssessmentFormComplete() {
           <div className="container mx-auto px-4 py-4">
             <div className="max-w-7xl mx-auto">
               <div className="flex justify-between items-center">
-                <div className="flex flex-col gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
-                        window.location.reload();
-                      }
-                    }}
-                    disabled={isLoading}
-                  >
-                    ล้างข้อมูล
-                  </Button>
-                  <p className="text-xs text-gray-500">
-                    {isEditMode 
-                      ? `แก้ไขโดย: ${username}` 
-                      : `บันทึกในชื่อ: ${username}`
-                    }
-                  </p>
-                </div>
-                <Button type="submit" disabled={isLoading} size="lg">
-                  {isLoading ? (
+                {/* Left: Original Recorder Info */}
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  {isEditMode && originalAssessedBy ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {isEditMode ? 'กำลังแก้ไข...' : 'กำลังบันทึก...'}
+                      <User className="w-4 h-4" />
+                      <span>ฟอร์มนี้บันทึกโดย: <span className="font-medium text-gray-900">{originalAssessedBy}</span></span>
                     </>
                   ) : (
-                    isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'
+                    <span className="text-gray-400">ฟอร์มใหม่</span>
                   )}
-                </Button>
+                </div>
+
+                {/* Right: Current User and Submit Button */}
+                <div className="flex items-center gap-4">
+                  <p className="text-sm text-gray-600">
+                    {isEditMode ? 'แก้ไขโดย' : 'จะบันทึกในชื่อ'}: <span className="font-medium text-gray-900">{currentUsername}</span>
+                  </p>
+                  <Button type="submit" disabled={isLoading} size="lg">
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isEditMode ? 'กำลังแก้ไข...' : 'กำลังบันทึก...'}
+                      </>
+                    ) : (
+                      isEditMode ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล'
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
