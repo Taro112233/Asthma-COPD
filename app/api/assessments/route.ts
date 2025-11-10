@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
               { patient: { lastName: { contains: search, mode: 'insensitive' } } }
             ]
           } : {},
-          type ? { patient: { patientType: type as any } } : {}
+          type ? { patient: { patientType: type as 'ADULT' | 'CHILD' } } : {}
         ]
       },
       include: {

@@ -13,7 +13,6 @@ interface PatientInfoSectionProps {
   alcoholAmount: string;
   smoking: string;
   smokingAmount: string;
-  onHospitalNumberChange: (value: string) => void;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   onAgeChange: (value: string) => void;
@@ -21,8 +20,6 @@ interface PatientInfoSectionProps {
   onAlcoholAmountChange: (value: string) => void;
   onSmokingChange: (value: 'YES' | 'NO' | '') => void;
   onSmokingAmountChange: (value: string) => void;
-  onSearch?: () => void; // เพิ่ม optional
-  isSearching?: boolean; // เพิ่ม optional
 }
 
 export function PatientInfoSection(props: PatientInfoSectionProps) {
@@ -33,9 +30,9 @@ export function PatientInfoSection(props: PatientInfoSectionProps) {
           <Label className="text-xs whitespace-nowrap">HN *</Label>
           <Input
             value={props.hospitalNumber}
-            onChange={(e) => props.onHospitalNumberChange(e.target.value)}
-            className="h-6 text-xs flex-1"
-            placeholder="HN"
+            disabled
+            className="h-6 text-xs flex-1 bg-gray-50 cursor-not-allowed"
+            placeholder="กรุณาค้นหา HN ด้านบน"
           />
           <Label className="text-xs whitespace-nowrap">ชื่อ</Label>
           <Input

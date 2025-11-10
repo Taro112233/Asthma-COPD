@@ -228,9 +228,8 @@ export function AdultAssessmentFormComplete() {
   
   const [formData, setFormData] = useState<FormData>(getInitialFormData());
 
-  // Get username from cookie - พร้อม DEBUG
+  // Get username from cookie
   useEffect(() => {
-    // DEBUG: แสดง cookie ทั้งหมด
     console.log('=== DEBUG COOKIE START ===');
     console.log('All cookies:', document.cookie);
     
@@ -260,11 +259,6 @@ export function AdultAssessmentFormComplete() {
     console.log('=== DEBUG COOKIE END ===');
   }, []);
 
-  const clearFormData = () => {
-    setFormData(getInitialFormData());
-    setOriginalAssessedBy('');
-  };
-
   const searchPatientByHN = async () => {
     if (!searchHN.trim()) {
       toast.error('กรุณากรอก HN');
@@ -278,8 +272,9 @@ export function AdultAssessmentFormComplete() {
         const patient: PatientData = await res.json();
         setPatientData(patient);
         
+        // ✅ Sync ค่า HN จากช่องค้นหาไปยัง formData
         const newFormData = getInitialFormData();
-        newFormData.hospitalNumber = patient.hospitalNumber;
+        newFormData.hospitalNumber = searchHN.trim(); // ใช้ค่าจาก searchHN
         newFormData.firstName = patient.firstName || '';
         newFormData.lastName = patient.lastName || '';
         newFormData.age = patient.age?.toString() || '';
@@ -294,7 +289,12 @@ export function AdultAssessmentFormComplete() {
         setSelectedVisitId('');
         setIsEditMode(false);
         setOriginalAssessedBy('');
-        clearFormData();
+        
+        // ✅ ถ้าไม่พบข้อมูล ให้ clear form แต่เก็บ HN ที่ค้นหาไว้
+        const newFormData = getInitialFormData();
+        newFormData.hospitalNumber = searchHN.trim(); // เก็บ HN ที่ค้นหา
+        setFormData(newFormData);
+        
         toast.info('ไม่พบข้อมูลผู้ป่วย จะสร้างข้อมูลใหม่');
       }
     } catch (error) {
@@ -422,35 +422,6 @@ export function AdultAssessmentFormComplete() {
       toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const searchPatient = async () => {
-    if (!formData.hospitalNumber.trim()) {
-      toast.error('กรุณากรอก HN');
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const res = await fetch(`/api/patients/search?hn=${formData.hospitalNumber}`);
-      if (res.ok) {
-        const patient = await res.json();
-        setFormData(prev => ({
-          ...prev,
-          firstName: patient.firstName || '',
-          lastName: patient.lastName || '',
-          age: patient.age?.toString() || '',
-        }));
-        toast.success('พบข้อมูลผู้ป่วย');
-      } else {
-        toast.info('ไม่พบข้อมูลผู้ป่วย จะสร้างข้อมูลใหม่');
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      toast.error('เกิดข้อผิดพลาดในการค้นหา');
-    } finally {
-      setIsSearching(false);
     }
   };
 
@@ -674,8 +645,6 @@ export function AdultAssessmentFormComplete() {
                 alcoholAmount={formData.alcoholAmount}
                 smoking={formData.smoking}
                 smokingAmount={formData.smokingAmount}
-                isSearching={isSearching}
-                onHospitalNumberChange={(value) => setFormData(prev => ({ ...prev, hospitalNumber: value }))}
                 onFirstNameChange={(value) => setFormData(prev => ({ ...prev, firstName: value }))}
                 onLastNameChange={(value) => setFormData(prev => ({ ...prev, lastName: value }))}
                 onAgeChange={(value) => setFormData(prev => ({ ...prev, age: value }))}
@@ -683,7 +652,6 @@ export function AdultAssessmentFormComplete() {
                 onAlcoholAmountChange={(value) => setFormData(prev => ({ ...prev, alcoholAmount: value }))}
                 onSmokingChange={(value) => setFormData(prev => ({ ...prev, smoking: value }))}
                 onSmokingAmountChange={(value) => setFormData(prev => ({ ...prev, smokingAmount: value }))}
-                onSearch={searchPatient}
               />
             </div>
 
