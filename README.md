@@ -14,10 +14,6 @@ Directory structure:
     │   ├── globals.css
     │   ├── layout.tsx
     │   ├── page.tsx
-    │   ├── adult/
-    │   │   ├── page.tsx
-    │   │   └── success/
-    │   │       └── page.tsx
     │   ├── api/
     │   │   ├── assessments/
     │   │   │   ├── route.ts
@@ -33,6 +29,10 @@ Directory structure:
     │   │           └── route.ts
     │   ├── dashboard/
     │   │   └── page.tsx
+    │   ├── form/
+    │   │   ├── page.tsx
+    │   │   └── success/
+    │   │       └── page.tsx
     │   └── login/
     │       └── page.tsx
     ├── components/
@@ -50,9 +50,7 @@ Directory structure:
     │   │       ├── asthma-section.tsx
     │   │       ├── compliance-section.tsx
     │   │       ├── copd-section.tsx
-    │   │       ├── date-round-section.tsx
     │   │       ├── drps-section.tsx
-    │   │       ├── index.ts
     │   │       ├── inhaler-technique-section.tsx
     │   │       ├── medications-section.tsx
     │   │       ├── non-compliance-reasons-section.tsx
