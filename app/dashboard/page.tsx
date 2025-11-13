@@ -9,7 +9,7 @@ import { Stethoscope, Activity, ClipboardList } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
-    href: '/adult',
+    href: '/form',
     icon: Stethoscope,
     title: 'แบบฟอร์มผู้ใหญ่',
     subtitle: 'Adult Assessment Form',
