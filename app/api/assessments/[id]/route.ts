@@ -87,7 +87,6 @@ export async function PATCH(
     const assessment = await prisma.assessment.update({
       where: { id },
       data: {
-        assessmentRound: data.assessmentRound || undefined,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : undefined,
         assessedBy: username, // ✅ ทับด้วยชื่อคนแก้ไขล่าสุด
         

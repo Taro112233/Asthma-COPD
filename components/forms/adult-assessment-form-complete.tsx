@@ -593,7 +593,7 @@ export function AdultAssessmentFormComplete() {
 
       if (res.ok) {
         toast.success(isEditMode ? "แก้ไขข้อมูลสำเร็จ" : "บันทึกข้อมูลสำเร็จ");
-        router.push("/adult/success");
+        router.push("/form/success");
       } else {
         const error = await res.json();
         toast.error("เกิดข้อผิดพลาด", {

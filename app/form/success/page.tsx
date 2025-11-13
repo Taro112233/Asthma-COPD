@@ -29,7 +29,7 @@ export default function AdultSuccessPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <Button 
-            onClick={() => router.push('/adult')} 
+            onClick={() => router.push('/form')} 
             className="w-full"
           >
             บันทึกผู้ป่วยรายใหม่

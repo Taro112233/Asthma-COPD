@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             assessmentDate: true,
-            assessmentRound: true,
             primaryDiagnosis: true,
             compliancePercent: true,
             assessedBy: true,
