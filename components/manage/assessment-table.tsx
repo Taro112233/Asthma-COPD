@@ -59,10 +59,10 @@ interface AssessmentTableProps {
 
 // Diagnosis labels in Thai
 const DIAGNOSIS_LABELS: Record<string, string> = {
-  'ASTHMA': 'หอบหืด',
-  'COPD': 'ปอดอุดกั้นเรื้อรัง',
+  'ASTHMA': 'ASTHMA',
+  'COPD': 'COPD',
   'ACOD': 'ACOD',
-  'BRONCHIECTASIS': 'หลอดลมขยาย',
+  'BRONCHIECTASIS': 'BRONCHIECTASIS',
   'ALLERGIC_RHINITIS': 'AR',
   'GERD': 'GERD',
 };

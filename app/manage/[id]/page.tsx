@@ -5,8 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -20,10 +19,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const DIAGNOSIS_LABELS: Record<string, string> = {
-  'ASTHMA': 'หอบหืด',
-  'COPD': 'ปอดอุดกั้นเรื้อรัง',
+  'ASTHMA': 'ASTHMA',
+  'COPD': 'COPD',
   'ACOD': 'ACOD',
-  'BRONCHIECTASIS': 'หลอดลมขยาย',
+  'BRONCHIECTASIS': 'BRONCHIECTASIS',
   'ALLERGIC_RHINITIS': 'AR',
   'GERD': 'GERD',
 };
@@ -35,6 +34,8 @@ export default function AssessmentDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [copiedHN, setCopiedHN] = useState(false);
+  const [copiedReport, setCopiedReport] = useState(false);
 
   useEffect(() => {
     fetchAssessment();
@@ -77,6 +78,119 @@ export default function AssessmentDetailPage() {
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleCopyHN = async () => {
+    try {
+      await navigator.clipboard.writeText(assessment.patient.hospitalNumber);
+      setCopiedHN(true);
+      toast.success('คัดลอก HN สำเร็จ');
+      setTimeout(() => setCopiedHN(false), 2000);
+    } catch (error) {
+      console.error('Error copying HN:', error);
+      toast.error('ไม่สามารถคัดลอก HN ได้');
+    }
+  };
+
+  // ✅ Function สำหรับ generate เทคนิคพ่นยา
+  const generateTechniqueText = () => {
+    if (assessment.techniqueCorrect) {
+      return 'ถูกต้องทุกขั้นตอน';
+    }
+
+    const steps = assessment.techniqueSteps || {};
+    const stepLabels: Record<string, string> = {
+      'prepare': 'เตรียมยา',
+      'inhale': 'สูดยา',
+      'rinse': 'บ้วนปาก',
+      'empty': 'หายใจออก'
+    };
+
+    // รวบรวมข้อมูล device ทั้งหมดที่มีการบันทึก
+    const deviceErrors: Record<string, string[]> = {};
+
+    Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+      if (devices && typeof devices === 'object') {
+        Object.entries(devices).forEach(([device, data]: [string, any]) => {
+          if (data?.status === 'incorrect') {
+            if (!deviceErrors[device]) {
+              deviceErrors[device] = [];
+            }
+            deviceErrors[device].push(stepLabels[stepKey] || stepKey);
+          }
+        });
+      }
+    });
+
+    if (Object.keys(deviceErrors).length === 0) {
+      return 'ไม่มีข้อผิดพลาด';
+    }
+
+    return Object.entries(deviceErrors)
+      .map(([device, errors]) => {
+        const errorText = errors.map(e => `ไม่${e}`).join(', ');
+        return `${device} ${errorText}`;
+      })
+      .join('; ');
+  };
+
+  const handleCopyReport = async () => {
+    try {
+      const reportText = `Asthma/COPD ambulatory: ${assessment.assessedBy || '-'}
+Dx: ${assessment.primaryDiagnosis ? DIAGNOSIS_LABELS[assessment.primaryDiagnosis] || assessment.primaryDiagnosis : '-'}
+Level of controlled: ${
+  assessment.asthmaData?.controlLevel 
+    ? assessment.asthmaData.controlLevel === 'WELL' 
+      ? 'Well controlled (0 ข้อ)'
+      : assessment.asthmaData.controlLevel === 'PARTLY'
+      ? 'Partly controlled (1-2 ข้อ)'
+      : 'Uncontrolled (3-4 ข้อ)'
+    : assessment.copdData?.stage 
+    ? `Stage ${assessment.copdData.stage}`
+    : '-'
+}
+Note/Risk factor: ${assessment.note || '-'}
+AR: ${assessment.arData?.symptoms || '-'}${
+  assessment.arData?.severity || assessment.arData?.pattern
+    ? ` (${[assessment.arData.severity, assessment.arData.pattern].filter(Boolean).join(', ')})`
+    : ''
+}
+เทคนิคพ่นยา: ${generateTechniqueText()}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+ADR: ${
+  assessment.hasSideEffects
+    ? [
+        ...(assessment.sideEffects || []).map((se: string) => {
+          const labels: Record<string, string> = {
+            'ORAL_CANDIDIASIS': 'เชื้อราในปาก',
+            'HOARSE_VOICE': 'เสียงแหบ',
+            'PALPITATION': 'ใจสั่น'
+          };
+          return labels[se] || se;
+        }),
+        assessment.sideEffectsOther || ''
+      ].filter(Boolean).join(', ')
+    : 'ไม่มี'
+}${assessment.sideEffectsManagement ? ` (การจัดการ: ${assessment.sideEffectsManagement})` : ''}
+Other: ${assessment.drps || '-'}
+ยาเหลือ: ${
+  assessment.medicationStatus === 'HAS_REMAINING'
+    ? assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0
+      ? (assessment.medications as Array<{name: string; quantity: number}>)
+          .map(med => `${med.name} (${med.quantity})`)
+          .join(', ')
+      : 'มี'
+    : 'ไม่เหลือ'
+}`;
+
+      await navigator.clipboard.writeText(reportText);
+      setCopiedReport(true);
+      toast.success('คัดลอกข้อมูลการประเมินสำเร็จ');
+      setTimeout(() => setCopiedReport(false), 2000);
+    } catch (error) {
+      console.error('Error copying report:', error);
+      toast.error('ไม่สามารถคัดลอกข้อมูลได้');
     }
   };
 
@@ -139,7 +253,21 @@ export default function AssessmentDetailPage() {
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium text-gray-500">HN</label>
-                <p className="text-base font-medium">{assessment.patient.hospitalNumber}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-base font-medium">{assessment.patient.hospitalNumber}</p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCopyHN}
+                    className="h-6 w-6 p-0"
+                  >
+                    {copiedHN ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-500">ชื่อ-สกุล</label>
@@ -153,58 +281,95 @@ export default function AssessmentDetailPage() {
                   <p className="text-base">{assessment.patient.age} ปี</p>
                 </div>
               )}
+              <div>
+                <label className="text-sm font-medium text-gray-500">วันที่ประเมิน</label>
+                <p className="text-base">
+                  {new Date(assessment.assessmentDate).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </p>
+              </div>
             </CardContent>
           </Card>
 
           {/* Assessment Info */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>ข้อมูลการประเมิน</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>ข้อมูลการประเมิน</CardTitle>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCopyReport}
+                  className="gap-2"
+                >
+                  {copiedReport ? (
+                    <>
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span>คัดลอกแล้ว</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4" />
+                      <span>คัดลอกข้อมูล</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">วันที่ประเมิน</label>
-                  <p className="text-base">
-                    {new Date(assessment.assessmentDate).toLocaleDateString('th-TH', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </p>
-                </div>
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <pre className="text-sm whitespace-pre-wrap font-mono text-gray-800">
+{`Asthma/COPD ambulatory: ${assessment.assessedBy || '-'}
+Dx: ${assessment.primaryDiagnosis ? DIAGNOSIS_LABELS[assessment.primaryDiagnosis] || assessment.primaryDiagnosis : '-'}
+Level of controlled: ${
+  assessment.asthmaData?.controlLevel 
+    ? assessment.asthmaData.controlLevel === 'WELL' 
+      ? 'Well controlled (0 ข้อ)'
+      : assessment.asthmaData.controlLevel === 'PARTLY'
+      ? 'Partly controlled (1-2 ข้อ)'
+      : 'Uncontrolled (3-4 ข้อ)'
+    : assessment.copdData?.stage 
+    ? `Stage ${assessment.copdData.stage}`
+    : '-'
+}
+Note/Risk factor: ${assessment.note || '-'}
+AR: ${assessment.arData?.symptoms || '-'}${
+  assessment.arData?.severity || assessment.arData?.pattern
+    ? ` (${[assessment.arData.severity, assessment.arData.pattern].filter(Boolean).join(', ')})`
+    : ''
+}
+เทคนิคพ่นยา: ${generateTechniqueText()}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+ADR: ${
+  assessment.hasSideEffects
+    ? [
+        ...(assessment.sideEffects || []).map((se: string) => {
+          const labels: Record<string, string> = {
+            'ORAL_CANDIDIASIS': 'เชื้อราในปาก',
+            'HOARSE_VOICE': 'เสียงแหบ',
+            'PALPITATION': 'ใจสั่น'
+          };
+          return labels[se] || se;
+        }),
+        assessment.sideEffectsOther || ''
+      ].filter(Boolean).join(', ')
+    : 'ไม่มี'
+}${assessment.sideEffectsManagement ? ` (การจัดการ: ${assessment.sideEffectsManagement})` : ''}
+Other: ${assessment.drps || '-'}
+ยาเหลือ: ${
+  assessment.medicationStatus === 'HAS_REMAINING'
+    ? assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0
+      ? (assessment.medications as Array<{name: string; quantity: number}>)
+          .map(med => `${med.name} (${med.quantity})`)
+          .join(', ')
+      : 'มี'
+    : 'ไม่เหลือ'
+}`}
+                </pre>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">โรคหลัก</label>
-                  <p className="text-base">
-                    {assessment.primaryDiagnosis ? (
-                      <Badge variant="outline">
-                        {DIAGNOSIS_LABELS[assessment.primaryDiagnosis] || assessment.primaryDiagnosis}
-                      </Badge>
-                    ) : '-'}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Compliance</label>
-                  <p className="text-base font-medium">
-                    {assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-500">ประเมินโดย</label>
-                <p className="text-base">{assessment.assessedBy || '-'}</p>
-              </div>
-
-              {assessment.note && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">หมายเหตุ</label>
-                  <p className="text-base text-gray-700">{assessment.note}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

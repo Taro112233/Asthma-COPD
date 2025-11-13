@@ -60,25 +60,31 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
     });
   };
 
-  const handleNoteChange = (step: string, value: string) => {
+  const handleNoteChange = (step: string, device: string, value: string) => {
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
-    const activeDevice = Object.entries(technique.techniqueSteps[stepKey] || {})
-      .find(([, val]) => val.status !== 'none')?.[0];
 
-    if (activeDevice) {
-      onTechniqueChange({
-        techniqueSteps: {
-          ...technique.techniqueSteps,
-          [stepKey]: {
-            ...technique.techniqueSteps[stepKey],
-            [activeDevice]: {
-              status: technique.techniqueSteps[stepKey][activeDevice].status,
-              note: value,
-            }
+    onTechniqueChange({
+      techniqueSteps: {
+        ...technique.techniqueSteps,
+        [stepKey]: {
+          ...technique.techniqueSteps[stepKey],
+          [device]: {
+            status: technique.techniqueSteps[stepKey][device].status,
+            note: value,
           }
         }
-      });
-    }
+      }
+    });
+  };
+
+  // ✅ หา devices ที่ทำผิด (incorrect) ในแต่ละ step
+  const getIncorrectDevices = (step: string): Array<{device: string; note: string}> => {
+    const stepKey = step.toLowerCase() as keyof TechniqueSteps;
+    const stepData = technique.techniqueSteps[stepKey] || {};
+    
+    return Object.entries(stepData)
+      .filter(([, val]) => val.status === 'incorrect')
+      .map(([device, val]) => ({ device, note: val.note || '' }));
   };
 
   const renderStatusIcon = (status: 'correct' | 'incorrect' | 'none') => {
@@ -120,37 +126,49 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
             {DEVICES.map(device => (
               <div key={device} className="p-1 border-r text-center">{device === 'TURBO' ? 'Turbu' : device}</div>
             ))}
-            <div className="p-1">รายละเอียด</div>
+            <div className="p-1">รายละเอียดปัญหา (ถ้ามี)</div>
           </div>
 
-          {STEPS.map((step) => (
-            <div key={step} className="grid grid-cols-[80px_repeat(7,60px)_1fr] border-b last:border-b-0">
-              <div className="p-1 border-r font-medium">{step}</div>
-              {DEVICES.map((device) => {
-                const status = technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps]?.[device]?.status || 'none';
-                return (
-                  <div 
-                    key={device} 
-                    className="p-1 border-r flex items-center justify-center cursor-pointer hover:bg-gray-50"
-                    onClick={() => handleStepClick(step, device)}
-                  >
-                    {renderStatusIcon(status)}
-                  </div>
-                );
-              })}
-              <div className="p-0.5">
-                <Input
-                  value={
-                    Object.entries(technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps] || {})
-                      .find(([, val]) => val.status !== 'none')?.[1]?.note || ''
-                  }
-                  onChange={(e) => handleNoteChange(step, e.target.value)}
-                  className="h-5 text-xs border-0 focus-visible:ring-0"
-                  placeholder="..."
-                />
+          {STEPS.map((step) => {
+            const incorrectDevices = getIncorrectDevices(step);
+            
+            return (
+              <div key={step} className="grid grid-cols-[80px_repeat(7,60px)_1fr] border-b last:border-b-0">
+                <div className="p-1 border-r font-medium">{step}</div>
+                {DEVICES.map((device) => {
+                  const status = technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps]?.[device]?.status || 'none';
+                  return (
+                    <div 
+                      key={device} 
+                      className="p-1 border-r flex items-center justify-center cursor-pointer hover:bg-gray-50"
+                      onClick={() => handleStepClick(step, device)}
+                    >
+                      {renderStatusIcon(status)}
+                    </div>
+                  );
+                })}
+                
+                {/* ✅ แสดง Input เฉพาะ devices ที่ผิด */}
+                <div className="p-1 space-y-1">
+                  {incorrectDevices.length === 0 ? (
+                    <span className="text-gray-400 text-xs">-</span>
+                  ) : (
+                    incorrectDevices.map(({ device, note }) => (
+                      <div key={device} className="flex items-center gap-1">
+                        <span className="text-xs font-medium text-red-600 whitespace-nowrap">{device}:</span>
+                        <Input
+                          value={note}
+                          onChange={(e) => handleNoteChange(step, device, e.target.value)}
+                          className="h-5 text-xs border-gray-300 flex-1"
+                          placeholder="ระบุปัญหา..."
+                        />
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Spacer */}

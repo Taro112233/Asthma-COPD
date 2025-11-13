@@ -1,4 +1,4 @@
-// app/adult/success/page.tsx
+// app/form/success/page.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
