@@ -49,11 +49,20 @@ export async function GET(request: NextRequest) {
 // POST - Create new assessment
 export async function POST(request: NextRequest) {
   try {
+    // ✅ ดึง username จาก cookie
     const cookies = request.headers.get('cookie');
     const authCookie = cookies?.split(';').find(c => c.trim().startsWith('auth='));
-    const username = authCookie 
-      ? JSON.parse(decodeURIComponent(authCookie.split('=')[1])).username 
-      : 'Unknown';
+    
+    let username = 'Unknown';
+    if (authCookie) {
+      try {
+        const authValue = decodeURIComponent(authCookie.split('=')[1]);
+        const authData = JSON.parse(authValue);
+        username = authData.username || 'Unknown';
+      } catch (error) {
+        console.error('Failed to parse auth cookie:', error);
+      }
+    }
 
     const data = await request.json();
 
@@ -65,13 +74,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create or update patient (upsert) - เพิ่มการอัปเดต age
+    // Create or update patient (upsert)
     await prisma.patient.upsert({
       where: { hospitalNumber: data.hospitalNumber },
       update: {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
-        age: data.age || null, // เพิ่มการอัปเดต age
+        age: data.age || null,
         patientType: data.patientType || null,
         updatedAt: new Date(),
       },
@@ -79,9 +88,9 @@ export async function POST(request: NextRequest) {
         hospitalNumber: data.hospitalNumber,
         firstName: data.firstName || null,
         lastName: data.lastName || null,
-        age: data.age || null, // เพิ่มการสร้าง age
+        age: data.age || null,
         patientType: data.patientType || null,
-        createdBy: username,
+        createdBy: username, // ✅ ใช้ username ที่ดึงมา
       }
     });
 
@@ -91,7 +100,7 @@ export async function POST(request: NextRequest) {
         hospitalNumber: data.hospitalNumber,
         assessmentRound: data.assessmentRound || null,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
-        assessedBy: username,
+        assessedBy: username, // ✅ บันทึกชื่อคนสร้างใหม่
         
         // Header
         alcohol: data.alcohol || null,

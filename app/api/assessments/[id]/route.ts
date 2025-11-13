@@ -41,6 +41,22 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+    
+    // ✅ ดึง username จาก cookie
+    const cookies = request.headers.get('cookie');
+    const authCookie = cookies?.split(';').find(c => c.trim().startsWith('auth='));
+    
+    let username = 'Unknown';
+    if (authCookie) {
+      try {
+        const authValue = decodeURIComponent(authCookie.split('=')[1]);
+        const authData = JSON.parse(authValue);
+        username = authData.username || 'Unknown';
+      } catch (error) {
+        console.error('Failed to parse auth cookie:', error);
+      }
+    }
+
     const data = await request.json();
 
     // ดึงข้อมูล assessment เดิมเพื่อเอา hospitalNumber
@@ -62,7 +78,7 @@ export async function PATCH(
       data: {
         firstName: data.firstName || undefined,
         lastName: data.lastName || undefined,
-        age: data.age || undefined, // เพิ่มการอัปเดต age
+        age: data.age || undefined,
         updatedAt: new Date(),
       }
     });
@@ -73,6 +89,7 @@ export async function PATCH(
       data: {
         assessmentRound: data.assessmentRound || undefined,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : undefined,
+        assessedBy: username, // ✅ ทับด้วยชื่อคนแก้ไขล่าสุด
         
         // Header
         alcohol: data.alcohol,
