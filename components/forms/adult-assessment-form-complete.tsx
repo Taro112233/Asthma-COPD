@@ -32,7 +32,6 @@ import { MedicationsSection } from "./sections/medications-section";
 // Type definitions
 interface FormData {
   assessmentDate: string;
-  assessmentRound: "PRE_COUNSELING" | "POST_COUNSELING" | "";
   hospitalNumber: string;
   firstName: string;
   lastName: string;
@@ -144,7 +143,6 @@ interface FormData {
 interface PatientVisit {
   id: string;
   assessmentDate: string;
-  assessmentRound: string;
   primaryDiagnosis: string;
   compliancePercent: number;
   assessedBy: string;
@@ -160,7 +158,6 @@ interface PatientData {
 
 const getInitialFormData = (): FormData => ({
   assessmentDate: new Date().toISOString().split("T")[0],
-  assessmentRound: "",
   hospitalNumber: "",
   firstName: "",
   lastName: "",
@@ -362,7 +359,6 @@ export function AdultAssessmentFormComplete() {
           assessmentDate: assessment.assessmentDate
             ? new Date(assessment.assessmentDate).toISOString().split("T")[0]
             : new Date().toISOString().split("T")[0],
-          assessmentRound: assessment.assessmentRound || "",
           hospitalNumber: assessment.patient.hospitalNumber || "",
           firstName: assessment.patient.firstName || "",
           lastName: assessment.patient.lastName || "",
@@ -497,8 +493,6 @@ export function AdultAssessmentFormComplete() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         age: formData.age ? parseInt(formData.age) : null,
-        patientType: "ADULT",
-        assessmentRound: formData.assessmentRound || null,
         assessmentDate: formData.assessmentDate,
         alcohol: formData.alcohol === "YES",
         alcoholAmount: formData.alcoholAmount || null,

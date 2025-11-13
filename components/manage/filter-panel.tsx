@@ -18,12 +18,10 @@ interface FilterPanelProps {
   diagnosis: string;
   dateFrom: string;
   dateTo: string;
-  patientType: string;
   onSearchChange: (value: string) => void;
   onDiagnosisChange: (value: string) => void;
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
-  onPatientTypeChange: (value: string) => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
 }
@@ -43,12 +41,10 @@ export function FilterPanel({
   diagnosis,
   dateFrom,
   dateTo,
-  patientType,
   onSearchChange,
   onDiagnosisChange,
   onDateFromChange,
   onDateToChange,
-  onPatientTypeChange,
   onClearFilters,
   hasActiveFilters,
 }: FilterPanelProps) {
@@ -109,21 +105,6 @@ export function FilterPanel({
             onChange={(e) => onDateToChange(e.target.value)}
             className="h-9"
           />
-        </div>
-
-        {/* Patient Type */}
-        <div className="space-y-1">
-          <Label htmlFor="patientType" className="text-xs">ประเภทผู้ป่วย</Label>
-          <Select value={patientType} onValueChange={onPatientTypeChange}>
-            <SelectTrigger id="patientType" className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">ทั้งหมด</SelectItem>
-              <SelectItem value="ADULT">ผู้ใหญ่</SelectItem>
-              <SelectItem value="CHILD">เด็ก</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

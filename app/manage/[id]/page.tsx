@@ -153,14 +153,6 @@ export default function AssessmentDetailPage() {
                   <p className="text-base">{assessment.patient.age} ปี</p>
                 </div>
               )}
-              <div>
-                <label className="text-sm font-medium text-gray-500">ประเภท</label>
-                <p className="text-base">
-                  <Badge variant="outline">
-                    {assessment.patient.patientType === 'ADULT' ? 'ผู้ใหญ่' : 'เด็ก'}
-                  </Badge>
-                </p>
-              </div>
             </CardContent>
           </Card>
 
@@ -179,14 +171,6 @@ export default function AssessmentDetailPage() {
                       month: 'long',
                       day: 'numeric'
                     })}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">รอบการประเมิน</label>
-                  <p className="text-base">
-                    <Badge variant={assessment.assessmentRound === 'PRE_COUNSELING' ? 'secondary' : 'default'}>
-                      {assessment.assessmentRound === 'PRE_COUNSELING' ? 'Pre-Counseling' : 'Post-Counseling'}
-                    </Badge>
                   </p>
                 </div>
               </div>

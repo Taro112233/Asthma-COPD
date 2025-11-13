@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
               { patient: { lastName: { contains: search, mode: 'insensitive' } } }
             ]
           } : {},
-          type ? { patient: { patientType: type as 'ADULT' | 'CHILD' } } : {}
         ]
       },
       include: {
@@ -28,7 +27,6 @@ export async function GET(request: NextRequest) {
             hospitalNumber: true,
             firstName: true,
             lastName: true,
-            patientType: true,
           }
         }
       },
@@ -81,7 +79,6 @@ export async function POST(request: NextRequest) {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
         age: data.age || null,
-        patientType: data.patientType || null,
         updatedAt: new Date(),
       },
       create: {
@@ -89,7 +86,6 @@ export async function POST(request: NextRequest) {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
         age: data.age || null,
-        patientType: data.patientType || null,
         createdBy: username, // ✅ ใช้ username ที่ดึงมา
       }
     });
@@ -98,7 +94,6 @@ export async function POST(request: NextRequest) {
     const assessment = await prisma.assessment.create({
       data: {
         hospitalNumber: data.hospitalNumber,
-        assessmentRound: data.assessmentRound || null,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
         assessedBy: username, // ✅ บันทึกชื่อคนสร้างใหม่
         

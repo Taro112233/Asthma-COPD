@@ -37,7 +37,6 @@ import { useRouter } from "next/navigation";
 interface Assessment {
   id: string;
   assessmentDate: string;
-  assessmentRound: string | null;
   primaryDiagnosis: string | null;
   compliancePercent: number | null;
   assessedBy: string | null;
@@ -47,7 +46,6 @@ interface Assessment {
     firstName: string | null;
     lastName: string | null;
     age: number | null;
-    patientType: string | null;
   };
 }
 
@@ -145,13 +143,11 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
       "HN": assessment.patient.hospitalNumber,
       "ชื่อ-สกุล": `${assessment.patient.firstName || ''} ${assessment.patient.lastName || ''}`.trim(),
       "อายุ": assessment.patient.age || '-',
-      "ประเภท": assessment.patient.patientType === 'ADULT' ? 'ผู้ใหญ่' : 'เด็ก',
       "วันที่ประเมิน": new Date(assessment.assessmentDate).toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       }),
-      "รอบการประเมิน": assessment.assessmentRound === 'PRE_COUNSELING' ? 'Pre' : 'Post',
       "โรคหลัก": DIAGNOSIS_LABELS[assessment.primaryDiagnosis || ''] || '-',
       "Compliance %": assessment.compliancePercent || 0,
       "ประเมินโดย": assessment.assessedBy || '-',
@@ -259,7 +255,6 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                     {getSortIcon('assessmentDate')}
                   </div>
                 </TableHead>
-                <TableHead>รอบ</TableHead>
                 <TableHead>โรคหลัก</TableHead>
                 <TableHead 
                   className="cursor-pointer select-none"
@@ -310,11 +305,6 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                         month: 'short',
                         day: 'numeric'
                       })}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={assessment.assessmentRound === 'PRE_COUNSELING' ? 'secondary' : 'default'}>
-                        {assessment.assessmentRound === 'PRE_COUNSELING' ? 'Pre' : 'Post'}
-                      </Badge>
                     </TableCell>
                     <TableCell>
                       {assessment.primaryDiagnosis ? (

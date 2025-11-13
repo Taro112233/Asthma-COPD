@@ -17,11 +17,11 @@ const MENU_ITEMS = [
     color: 'blue' as const
   },
   {
-    href: '/child',
+    href: '/report',
     icon: Activity,
-    title: 'แบบฟอร์มเด็ก',
-    subtitle: 'Pediatric Assessment Form',
-    description: 'บันทึกข้อมูลการประเมินผู้ป่วยเด็ก<br />Record pediatric patient assessment',
+    title: 'รายงาน',
+    subtitle: 'Report data',
+    description: 'รายงานข้อมูลการประเมินผู้ป่วย<br />Record pediatric patient assessment',
     color: 'green' as const
   },
   {

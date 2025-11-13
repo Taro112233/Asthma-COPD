@@ -37,15 +37,13 @@ export default function ManagePage() {
   const [diagnosis, setDiagnosis] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [patientType, setPatientType] = useState("all");
 
   // ✅ แก้ไขตรงนี้
   const hasActiveFilters = Boolean(
-    search || 
-    diagnosis !== "all" || 
-    dateFrom || 
-    dateTo || 
-    patientType !== "all"
+    search ||
+    diagnosis !== "all" ||
+    dateFrom ||
+    dateTo
   );
 
   const fetchData = async () => {
@@ -57,7 +55,6 @@ export default function ManagePage() {
       if (diagnosis !== 'all') params.append('diagnosis', diagnosis);
       if (dateFrom) params.append('dateFrom', dateFrom);
       if (dateTo) params.append('dateTo', dateTo);
-      if (patientType !== 'all') params.append('patientType', patientType);
 
       // Fetch assessments and stats in parallel
       const [assessmentsRes, statsRes] = await Promise.all([
@@ -84,14 +81,13 @@ export default function ManagePage() {
 
   useEffect(() => {
     fetchData();
-  }, [search, diagnosis, dateFrom, dateTo, patientType]);
+  }, [search, diagnosis, dateFrom, dateTo]);
 
   const handleClearFilters = () => {
     setSearch("");
     setDiagnosis("all");
     setDateFrom("");
     setDateTo("");
-    setPatientType("all");
   };
 
   return (
@@ -142,12 +138,10 @@ export default function ManagePage() {
           diagnosis={diagnosis}
           dateFrom={dateFrom}
           dateTo={dateTo}
-          patientType={patientType}
           onSearchChange={setSearch}
           onDiagnosisChange={setDiagnosis}
           onDateFromChange={setDateFrom}
           onDateToChange={setDateTo}
-          onPatientTypeChange={setPatientType}
           onClearFilters={handleClearFilters}
           hasActiveFilters={hasActiveFilters}
         />

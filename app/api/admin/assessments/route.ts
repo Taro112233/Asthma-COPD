@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
     const diagnosis = searchParams.get('diagnosis') || 'all';
     const dateFrom = searchParams.get('dateFrom');
     const dateTo = searchParams.get('dateTo');
-    const patientType = searchParams.get('patientType') || 'all';
 
     // Build where clause
     const where: any = {
@@ -31,13 +30,6 @@ export async function GET(request: NextRequest) {
     if (diagnosis !== 'all') {
       where.AND.push({
         primaryDiagnosis: diagnosis
-      });
-    }
-
-    // Filter by patient type
-    if (patientType !== 'all') {
-      where.AND.push({
-        patient: { patientType }
       });
     }
 
@@ -72,7 +64,6 @@ export async function GET(request: NextRequest) {
             firstName: true,
             lastName: true,
             age: true,
-            patientType: true,
           }
         }
       },

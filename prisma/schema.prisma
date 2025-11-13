@@ -22,7 +22,6 @@ model Patient {
   nickname        String?      // ชื่อเล่น (เฉพาะเด็ก)
   dateOfBirth     DateTime?    // วันเกิด (สำหรับคำนวณอายุ)
   age             Int?         // อายุ (ปี)
-  patientType     PatientType? // ADULT or CHILD (optional)
   
   // Metadata
   createdAt       DateTime     @default(now())
@@ -33,7 +32,6 @@ model Patient {
   assessments     Assessment[]
   
   // Indexes for performance
-  @@index([patientType])
   @@index([createdAt])
   
   @@map("patients")
@@ -49,7 +47,6 @@ model Assessment {
   patient               Patient            @relation(fields: [hospitalNumber], references: [hospitalNumber], onDelete: Cascade)
   
   // ========== META INFORMATION ==========
-  assessmentRound       AssessmentRound?   // PRE_COUNSELING | POST_COUNSELING (optional)
   assessmentDate        DateTime?          // วันที่ประเมิน (optional)
   assessedBy            String?            // Username from cookie (optional)
   
@@ -139,17 +136,6 @@ model Assessment {
 // ENUM DEFINITIONS
 // ============================================
 
-// Patient Type: Adult or Child
-enum PatientType {
-  ADULT  // ผู้ใหญ่
-  CHILD  // เด็ก
-}
-
-// Assessment Round: Pre or Post Counseling (Adult only)
-enum AssessmentRound {
-  PRE_COUNSELING   // ก่อนให้คำปรึกษา
-  POST_COUNSELING  // หลังให้คำปรึกษา
-}
 
 // Primary Diagnosis
 enum Diagnosis {
