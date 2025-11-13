@@ -15,6 +15,13 @@ Directory structure:
     │   ├── layout.tsx
     │   ├── page.tsx
     │   ├── api/
+    │   │   ├── admin/
+    │   │   │   ├── assessments/
+    │   │   │   │   ├── route.ts
+    │   │   │   │   └── bulk-delete/
+    │   │   │   │       └── route.ts
+    │   │   │   └── stats/
+    │   │   │       └── route.ts
     │   │   ├── assessments/
     │   │   │   ├── route.ts
     │   │   │   └── [id]/
@@ -33,8 +40,12 @@ Directory structure:
     │   │   ├── page.tsx
     │   │   └── success/
     │   │       └── page.tsx
-    │   └── login/
-    │       └── page.tsx
+    │   ├── login/
+    │   │   └── page.tsx
+    │   └── manage/
+    │       ├── page.tsx
+    │       └── [id]/
+    │           └── page.tsx
     ├── components/
     │   ├── auth/
     │   │   ├── auth-card.tsx
@@ -58,6 +69,10 @@ Directory structure:
     │   │       ├── primary-diagnosis-section.tsx
     │   │       ├── risk-factor-section.tsx
     │   │       └── side-effects-section.tsx
+    │   ├── manage/
+    │   │   ├── assessment-table.tsx
+    │   │   ├── filter-panel.tsx
+    │   │   └── stats-cards.tsx
     │   └── ui/
     │       ├── accordion.tsx
     │       ├── alert-dialog.tsx
