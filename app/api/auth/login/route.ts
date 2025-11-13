@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       username: username.trim()
     });
 
-    // Set secure HTTP-only cookie
+    // Set cookie (NOT httpOnly so client can read username)
     response.cookies.set('auth', JSON.stringify(authData), {
-      httpOnly: true,
+      httpOnly: false, // ✅ เปลี่ยนเป็น false เพื่อให้ client-side อ่านได้
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 8, // 8 hours

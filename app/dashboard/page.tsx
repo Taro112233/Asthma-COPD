@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const { username, handleLogout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen from-blue-50 to-white">
       <DashboardHeader username={username} onLogout={handleLogout} />
       
       <div className="container mx-auto px-4 py-12">
