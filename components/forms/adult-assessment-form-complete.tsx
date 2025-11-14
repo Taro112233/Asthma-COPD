@@ -80,7 +80,7 @@ interface FormData {
     };
   };
   technique: {
-    techniqueCorrect: boolean;
+    techniqueCorrect: boolean | null;
     techniqueSteps: {
       prepare: {
         [device: string]: {
@@ -201,7 +201,7 @@ const getInitialFormData = (): FormData => ({
     },
   },
   technique: {
-    techniqueCorrect: false,
+    techniqueCorrect: null,
     techniqueSteps: {
       prepare: {},
       inhale: {},

@@ -83,6 +83,31 @@ export async function PATCH(
       }
     });
 
+    // ✅ Process techniqueSteps - ensure proper structure with device-specific notes
+    let processedTechniqueSteps = data.techniqueSteps;
+    
+    if (processedTechniqueSteps) {
+      // Initialize step structure if missing
+      ['prepare', 'inhale', 'rinse', 'empty'].forEach(step => {
+        if (!processedTechniqueSteps[step]) {
+          processedTechniqueSteps[step] = {};
+        }
+        
+        // Ensure each device entry has correct structure
+        Object.keys(processedTechniqueSteps[step]).forEach(device => {
+          const entry = processedTechniqueSteps[step][device];
+          if (!entry || typeof entry !== 'object') {
+            processedTechniqueSteps[step][device] = { status: 'none', note: '' };
+          } else {
+            processedTechniqueSteps[step][device] = {
+              status: entry.status || 'none',
+              note: entry.note || ''
+            };
+          }
+        });
+      });
+    }
+
     // จากนั้นค่อยอัปเดต assessment
     const assessment = await prisma.assessment.update({
       where: { id },
@@ -130,10 +155,11 @@ export async function PATCH(
         medicationStatus: data.medicationStatus || undefined,
         unopenedMedication: data.unopenedMedication,
         
-        // Inhaler technique
-        techniqueCorrect: data.techniqueCorrect,
+        // ✅ Inhaler technique - with device-specific notes
+        // techniqueCorrect รองรับ 3 states: true (ถูกต้อง), false (ผิด), null (ไม่เลือก)
+        techniqueCorrect: data.techniqueCorrect === true ? true : data.techniqueCorrect === false ? false : null,
         inhalerDevices: data.inhalerDevices,
-        techniqueSteps: data.techniqueSteps,
+        techniqueSteps: processedTechniqueSteps,
         spacerType: data.spacerType,
         
         // Medications

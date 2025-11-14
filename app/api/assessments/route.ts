@@ -86,8 +86,36 @@ export async function POST(request: NextRequest) {
         firstName: data.firstName || null,
         lastName: data.lastName || null,
         age: data.age || null,
-        createdBy: username, // ✅ ใช้ username ที่ดึงมา
+        createdBy: username,
       }
+    });
+
+    // ✅ Process techniqueSteps - ensure proper structure with device-specific notes
+    const processedTechniqueSteps = data.techniqueSteps || {
+      prepare: {},
+      inhale: {},
+      rinse: {},
+      empty: {}
+    };
+
+    // Validate techniqueSteps structure
+    ['prepare', 'inhale', 'rinse', 'empty'].forEach(step => {
+      if (!processedTechniqueSteps[step]) {
+        processedTechniqueSteps[step] = {};
+      }
+      
+      // Ensure each device entry has correct structure
+      Object.keys(processedTechniqueSteps[step]).forEach(device => {
+        const entry = processedTechniqueSteps[step][device];
+        if (!entry || typeof entry !== 'object') {
+          processedTechniqueSteps[step][device] = { status: 'none', note: '' };
+        } else {
+          processedTechniqueSteps[step][device] = {
+            status: entry.status || 'none',
+            note: entry.note || ''
+          };
+        }
+      });
     });
 
     // Create assessment
@@ -95,7 +123,7 @@ export async function POST(request: NextRequest) {
       data: {
         hospitalNumber: data.hospitalNumber,
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
-        assessedBy: username, // ✅ บันทึกชื่อคนสร้างใหม่
+        assessedBy: username,
         
         // Header
         alcohol: data.alcohol || null,
@@ -137,10 +165,11 @@ export async function POST(request: NextRequest) {
         medicationStatus: data.medicationStatus || null,
         unopenedMedication: data.unopenedMedication || false,
         
-        // Inhaler technique
-        techniqueCorrect: data.techniqueCorrect || false,
+        // ✅ Inhaler technique - with device-specific notes
+        // techniqueCorrect รองรับ 3 states: true (ถูกต้อง), false (ผิด), null (ไม่เลือก)
+        techniqueCorrect: data.techniqueCorrect === true ? true : data.techniqueCorrect === false ? false : null,
         inhalerDevices: data.inhalerDevices || [],
-        techniqueSteps: data.techniqueSteps || null,
+        techniqueSteps: processedTechniqueSteps,
         spacerType: data.spacerType || null,
         
         // Medications

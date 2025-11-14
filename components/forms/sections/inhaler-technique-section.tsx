@@ -13,7 +13,7 @@ interface TechniqueSteps {
 }
 
 interface InhalerTechniqueData {
-  techniqueCorrect: boolean;
+  techniqueCorrect: boolean | null;  // ✅ เพิ่ม null เพื่อรองรับกรณีไม่เลือก
   techniqueSteps: TechniqueSteps;
   spacerType: string;
 }
@@ -96,6 +96,25 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
     return null;
   };
 
+  // ✅ แก้ไข handler สำหรับ checkbox ให้รองรับ 3 states
+  const handleTechniqueCorrectChange = (checked: boolean) => {
+    if (checked) {
+      onTechniqueChange({ techniqueCorrect: true });
+    } else {
+      // ถ้า uncheck "ถูกต้อง" ให้กลับเป็น null (ไม่เลือก)
+      onTechniqueChange({ techniqueCorrect: null });
+    }
+  };
+
+  const handleTechniqueIncorrectChange = (checked: boolean) => {
+    if (checked) {
+      onTechniqueChange({ techniqueCorrect: false });
+    } else {
+      // ถ้า uncheck "ไม่ถูกต้อง" ให้กลับเป็น null (ไม่เลือก)
+      onTechniqueChange({ techniqueCorrect: null });
+    }
+  };
+
   return (
     <Card className="col-span-2 row-span-2 col-start-1 row-start-7 p-2 h-full">
       <div className="space-y-1">
@@ -104,7 +123,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
             <Label className="text-xs font-semibold mb-0.5 block">เทคนิคการพ่นยา</Label>
             <Checkbox
               checked={technique.techniqueCorrect === true}
-              onCheckedChange={(checked) => onTechniqueChange({ techniqueCorrect: !!checked })}
+              onCheckedChange={handleTechniqueCorrectChange}
               id="tech-correct"
             />
             <Label htmlFor="tech-correct" className="text-xs">ถูกต้องทุกขั้นตอน</Label>
@@ -112,7 +131,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
           <div className="flex items-center space-x-1.5">
             <Checkbox
               checked={technique.techniqueCorrect === false}
-              onCheckedChange={(checked) => onTechniqueChange({ techniqueCorrect: !checked })}
+              onCheckedChange={handleTechniqueIncorrectChange}
               id="tech-incorrect"
             />
             <Label htmlFor="tech-incorrect" className="text-xs">ไม่ถูกต้อง</Label>

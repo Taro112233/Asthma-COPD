@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -100,39 +101,62 @@ export default function AssessmentDetailPage() {
     }
 
     const steps = assessment.techniqueSteps || {};
-    const stepLabels: Record<string, string> = {
-      'prepare': 'เตรียมยา',
-      'inhale': 'สูดยา',
-      'rinse': 'บ้วนปาก',
-      'empty': 'หายใจออก'
-    };
-
-    // รวบรวมข้อมูล device ทั้งหมดที่มีการบันทึก
-    const deviceErrors: Record<string, string[]> = {};
-
-    Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+    
+    // รวบรวมข้อมูลทุก device ที่มีในฐานข้อมูล
+    const allDevices = new Set<string>();
+    Object.values(steps).forEach((devices: any) => {
       if (devices && typeof devices === 'object') {
-        Object.entries(devices).forEach(([device, data]: [string, any]) => {
-          if (data?.status === 'incorrect') {
-            if (!deviceErrors[device]) {
-              deviceErrors[device] = [];
-            }
-            deviceErrors[device].push(stepLabels[stepKey] || stepKey);
-          }
-        });
+        Object.keys(devices).forEach(device => allDevices.add(device));
       }
     });
 
-    if (Object.keys(deviceErrors).length === 0) {
-      return 'ไม่มีข้อผิดพลาด';
+    // ถ้าไม่มี device เลย
+    if (allDevices.size === 0) {
+      return '-';
     }
 
-    return Object.entries(deviceErrors)
-      .map(([device, errors]) => {
-        const errorText = errors.map(e => `ไม่${e}`).join(', ');
-        return `${device} ${errorText}`;
-      })
-      .join('; ');
+    const deviceResults: string[] = [];
+
+    allDevices.forEach(device => {
+      let hasAnyStatus = false;
+      let allCorrect = true;
+      const incorrectDetails: string[] = [];
+
+      // ตรวจสอบทุก step ของ device นี้
+      Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+        if (devices && devices[device]) {
+          hasAnyStatus = true;
+          const status = devices[device].status;
+          const note = devices[device].note;
+
+          if (status === 'incorrect') {
+            allCorrect = false;
+            // ถ้ามี note ให้เอา note มาแสดง ถ้าไม่มีแสดงชื่อ step
+            if (note && note.trim()) {
+              incorrectDetails.push(note.trim());
+            }
+          }
+        }
+      });
+
+      // ถ้าไม่มีการประเมินเลย
+      if (!hasAnyStatus) {
+        deviceResults.push(`${device}: -`);
+      }
+      // ถ้าถูกหมดทุกขั้นตอน
+      else if (allCorrect) {
+        deviceResults.push(`${device}: ถูกต้องทุกขั้นตอน`);
+      }
+      // ถ้ามีข้อผิดพลาด
+      else {
+        const details = incorrectDetails.length > 0 
+          ? incorrectDetails.join(', ')
+          : 'มีข้อผิดพลาด';
+        deviceResults.push(`${device}: ${details}`);
+      }
+    });
+
+    return deviceResults.join('; ');
   };
 
   const handleCopyReport = async () => {
