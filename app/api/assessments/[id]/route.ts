@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-// GET - Get single assessment by ID
+// GET - (ไม่เปลี่ยนแปลง)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -34,7 +34,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update assessment
+// PATCH - Update assessment (มีการเปลี่ยนแปลง)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -42,7 +42,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     
-    // ✅ ดึง username จาก cookie
+    // ✅ ดึง username (เหมือนเดิม)
     const cookies = request.headers.get('cookie');
     const authCookie = cookies?.split(';').find(c => c.trim().startsWith('auth='));
     
@@ -59,7 +59,7 @@ export async function PATCH(
 
     const data = await request.json();
 
-    // ดึงข้อมูล assessment เดิมเพื่อเอา hospitalNumber
+    // ดึงข้อมูล assessment เดิม (เหมือนเดิม)
     const existingAssessment = await prisma.assessment.findUnique({
       where: { id },
       select: { hospitalNumber: true }
@@ -72,7 +72,7 @@ export async function PATCH(
       );
     }
 
-    // อัปเดตข้อมูล patient ก่อน (ยกเว้น HN)
+    // อัปเดต patient (เหมือนเดิม)
     await prisma.patient.update({
       where: { hospitalNumber: existingAssessment.hospitalNumber },
       data: {
@@ -83,88 +83,77 @@ export async function PATCH(
       }
     });
 
-    // ✅ Process techniqueSteps - ensure proper structure with device-specific notes
-    let processedTechniqueSteps = data.techniqueSteps;
-    
-    if (processedTechniqueSteps) {
-      // Initialize step structure if missing
-      ['prepare', 'inhale', 'rinse', 'empty'].forEach(step => {
-        if (!processedTechniqueSteps[step]) {
-          processedTechniqueSteps[step] = {};
-        }
+    // ✅ Process techniqueSteps - กรอง status 'none' ออก
+    const STEPS = ['prepare', 'inhale', 'rinse', 'empty'];
+    const processedTechniqueSteps: { [key: string]: any } = {};
+    const deviceSet = new Set<string>(); // ✅ Set สำหรับเก็บ device ที่ใช้งานจริง
+
+    STEPS.forEach(step => {
+      const stepData = data.techniqueSteps?.[step];
+      if (stepData) {
+        // กรองเฉพาะ entry ที่ status ไม่ใช่ 'none'
+        const filteredEntries = Object.entries(stepData)
+          .filter(([device, details]: [string, any]) => 
+            details && details.status !== 'none' && (details.status === 'correct' || details.status === 'incorrect')
+          )
+          .map(([device, details]: [string, any]) => {
+            deviceSet.add(device); // ✅ เพิ่ม device ที่ผ่านการกรองเข้า Set
+            return [device, { // คืนค่าโครงสร้างเดิม
+              status: details.status,
+              note: details.note || ''
+            }];
+          });
         
-        // Ensure each device entry has correct structure
-        Object.keys(processedTechniqueSteps[step]).forEach(device => {
-          const entry = processedTechniqueSteps[step][device];
-          if (!entry || typeof entry !== 'object') {
-            processedTechniqueSteps[step][device] = { status: 'none', note: '' };
-          } else {
-            processedTechniqueSteps[step][device] = {
-              status: entry.status || 'none',
-              note: entry.note || ''
-            };
-          }
-        });
-      });
-    }
+        processedTechniqueSteps[step] = Object.fromEntries(filteredEntries);
+      } else {
+        // ถ้าไม่มี step data ให้ khởi tạo เป็น object ว่าง
+        processedTechniqueSteps[step] = {};
+      }
+    });
+
+    // ✅ สร้าง inhalerDevices list ขึ้นมาใหม่จาก Set
+    const processedInhalerDevices = [...deviceSet];
 
     // จากนั้นค่อยอัปเดต assessment
     const assessment = await prisma.assessment.update({
       where: { id },
       data: {
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : undefined,
-        assessedBy: username, // ✅ ทับด้วยชื่อคนแก้ไขล่าสุด
+        assessedBy: username,
         
-        // Header
+        // ... (ส่วนอื่นๆ เหมือนเดิม) ...
         alcohol: data.alcohol,
         alcoholAmount: data.alcoholAmount,
         smoking: data.smoking,
         smokingAmount: data.smokingAmount,
-        
-        // Diagnosis
         primaryDiagnosis: data.primaryDiagnosis || undefined,
         secondaryDiagnoses: data.secondaryDiagnoses,
         note: data.note,
-        
-        // Disease-specific data
         asthmaData: data.asthmaData,
         copdData: data.copdData,
         arData: data.arData,
-        
-        // Compliance
         complianceStatus: data.complianceStatus || undefined,
         compliancePercent: data.compliancePercent,
         cannotAssessReason: data.cannotAssessReason,
-        
-        // Non-compliance reasons
         nonComplianceReasons: data.nonComplianceReasons,
         lessThanDetail: data.lessThanDetail,
         moreThanDetail: data.moreThanDetail,
         nonComplianceOther: data.nonComplianceOther,
-        
-        // Side effects
         hasSideEffects: data.hasSideEffects,
         sideEffects: data.sideEffects,
         sideEffectsOther: data.sideEffectsOther,
         sideEffectsManagement: data.sideEffectsManagement,
-        
-        // Clinical
         drps: data.drps,
-        
-        // Medication status
         medicationStatus: data.medicationStatus || undefined,
         unopenedMedication: data.unopenedMedication,
         
-        // ✅ Inhaler technique - with device-specific notes
-        // techniqueCorrect รองรับ 3 states: true (ถูกต้อง), false (ผิด), null (ไม่เลือก)
+        // ✅ Inhaler technique - ใช้ข้อมูลที่ผ่านการ process แล้ว
         techniqueCorrect: data.techniqueCorrect === true ? true : data.techniqueCorrect === false ? false : null,
-        inhalerDevices: data.inhalerDevices,
-        techniqueSteps: processedTechniqueSteps,
+        inhalerDevices: processedInhalerDevices, // ✅ ใช้ list ที่สร้างใหม่
+        techniqueSteps: processedTechniqueSteps, // ✅ ใช้ steps ที่กรองแล้ว
         spacerType: data.spacerType,
         
-        // Medications
         medications: data.medications,
-        
         updatedAt: new Date(),
       },
       include: {
@@ -182,7 +171,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete assessment
+// DELETE - (ไม่เปลี่ยนแปลง)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

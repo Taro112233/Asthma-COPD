@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-// GET - List all assessments with search/filter
+// GET - (ไม่เปลี่ยนแปลง)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -44,10 +44,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create new assessment
+// POST - Create new assessment (มีการเปลี่ยนแปลง)
 export async function POST(request: NextRequest) {
   try {
-    // ✅ ดึง username จาก cookie
+    // ✅ ดึง username (เหมือนเดิม)
     const cookies = request.headers.get('cookie');
     const authCookie = cookies?.split(';').find(c => c.trim().startsWith('auth='));
     
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json();
 
-    // Validate required field
+    // Validate required field (เหมือนเดิม)
     if (!data.hospitalNumber) {
       return NextResponse.json(
         { error: 'กรุณาระบุ HN' },
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create or update patient (upsert)
+    // Create or update patient (upsert) (เหมือนเดิม)
     await prisma.patient.upsert({
       where: { hospitalNumber: data.hospitalNumber },
       update: {
@@ -90,33 +90,37 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // ✅ Process techniqueSteps - ensure proper structure with device-specific notes
-    const processedTechniqueSteps = data.techniqueSteps || {
-      prepare: {},
-      inhale: {},
-      rinse: {},
-      empty: {}
-    };
+    // ✅ Process techniqueSteps - กรอง status 'none' ออก
+    const STEPS = ['prepare', 'inhale', 'rinse', 'empty'];
+    const processedTechniqueSteps: { [key: string]: any } = {};
+    const deviceSet = new Set<string>(); // ✅ Set สำหรับเก็บ device ที่ใช้งานจริง
 
-    // Validate techniqueSteps structure
-    ['prepare', 'inhale', 'rinse', 'empty'].forEach(step => {
-      if (!processedTechniqueSteps[step]) {
+    STEPS.forEach(step => {
+      const stepData = data.techniqueSteps?.[step];
+      if (stepData) {
+        // กรองเฉพาะ entry ที่ status ไม่ใช่ 'none'
+        const filteredEntries = Object.entries(stepData)
+          .filter(([device, details]: [string, any]) => 
+            details && details.status !== 'none' && (details.status === 'correct' || details.status === 'incorrect')
+          )
+          .map(([device, details]: [string, any]) => {
+            deviceSet.add(device); // ✅ เพิ่ม device ที่ผ่านการกรองเข้า Set
+            return [device, { // คืนค่าโครงสร้างเดิม
+              status: details.status,
+              note: details.note || ''
+            }];
+          });
+        
+        processedTechniqueSteps[step] = Object.fromEntries(filteredEntries);
+      } else {
+        // ถ้าไม่มี step data ให้ khởi tạo เป็น object ว่าง
         processedTechniqueSteps[step] = {};
       }
-      
-      // Ensure each device entry has correct structure
-      Object.keys(processedTechniqueSteps[step]).forEach(device => {
-        const entry = processedTechniqueSteps[step][device];
-        if (!entry || typeof entry !== 'object') {
-          processedTechniqueSteps[step][device] = { status: 'none', note: '' };
-        } else {
-          processedTechniqueSteps[step][device] = {
-            status: entry.status || 'none',
-            note: entry.note || ''
-          };
-        }
-      });
     });
+
+    // ✅ สร้าง inhalerDevices list ขึ้นมาใหม่จาก Set
+    const processedInhalerDevices = [...deviceSet];
+
 
     // Create assessment
     const assessment = await prisma.assessment.create({
@@ -125,54 +129,38 @@ export async function POST(request: NextRequest) {
         assessmentDate: data.assessmentDate ? new Date(data.assessmentDate) : new Date(),
         assessedBy: username,
         
-        // Header
+        // ... (ส่วนอื่นๆ เหมือนเดิม) ...
         alcohol: data.alcohol || null,
         alcoholAmount: data.alcoholAmount || null,
         smoking: data.smoking || null,
         smokingAmount: data.smokingAmount || null,
-        
-        // Diagnosis
         primaryDiagnosis: data.primaryDiagnosis || null,
         secondaryDiagnoses: data.secondaryDiagnoses || [],
         note: data.note || null,
-        
-        // Disease-specific data
         asthmaData: data.asthmaData || null,
         copdData: data.copdData || null,
         arData: data.arData || null,
-        
-        // Compliance
         complianceStatus: data.complianceStatus || null,
         compliancePercent: data.compliancePercent || 0,
         cannotAssessReason: data.cannotAssessReason || null,
-        
-        // Non-compliance reasons
         nonComplianceReasons: data.nonComplianceReasons || [],
         lessThanDetail: data.lessThanDetail || null,
         moreThanDetail: data.moreThanDetail || null,
         nonComplianceOther: data.nonComplianceOther || null,
-        
-        // Side effects
         hasSideEffects: data.hasSideEffects || false,
         sideEffects: data.sideEffects || [],
         sideEffectsOther: data.sideEffectsOther || null,
         sideEffectsManagement: data.sideEffectsManagement || null,
-        
-        // Clinical
         drps: data.drps || null,
-        
-        // Medication status
         medicationStatus: data.medicationStatus || null,
         unopenedMedication: data.unopenedMedication || false,
         
-        // ✅ Inhaler technique - with device-specific notes
-        // techniqueCorrect รองรับ 3 states: true (ถูกต้อง), false (ผิด), null (ไม่เลือก)
+        // ✅ Inhaler technique - ใช้ข้อมูลที่ผ่านการ process แล้ว
         techniqueCorrect: data.techniqueCorrect === true ? true : data.techniqueCorrect === false ? false : null,
-        inhalerDevices: data.inhalerDevices || [],
-        techniqueSteps: processedTechniqueSteps,
+        inhalerDevices: processedInhalerDevices, // ✅ ใช้ list ที่สร้างใหม่
+        techniqueSteps: processedTechniqueSteps, // ✅ ใช้ steps ที่กรองแล้ว
         spacerType: data.spacerType || null,
         
-        // Medications
         medications: data.medications || null,
       },
       include: {
