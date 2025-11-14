@@ -5,31 +5,31 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { MenuCard } from '@/components/dashboard/menu-card';
 import { InfoSection } from '@/components/dashboard/info-section';
 import { useAuth } from '@/hooks/use-auth';
-import { Stethoscope, Activity, ClipboardList } from 'lucide-react';
+import { ClipboardCheck, BarChart3, FolderOpen } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
     href: '/form',
-    icon: Stethoscope,
-    title: 'แบบฟอร์มผู้ใหญ่',
-    subtitle: 'Adult Assessment Form',
-    description: 'บันทึกข้อมูลการประเมินผู้ป่วยผู้ใหญ่<br />Record adult patient assessment',
+    icon: ClipboardCheck,
+    title: 'แบบประเมิน',
+    subtitle: 'Assessment Form',
+    description: 'บันทึกข้อมูลการประเมินผู้ป่วย<br />Record patient assessment',
     color: 'blue' as const
   },
   {
     href: '/report',
-    icon: Activity,
+    icon: BarChart3,
     title: 'รายงาน',
-    subtitle: 'Report data',
-    description: 'รายงานข้อมูลการประเมินผู้ป่วย<br />Record pediatric patient assessment',
+    subtitle: 'Reports',
+    description: 'ดูรายงานและสรุปข้อมูล<br />View reports and summaries',
     color: 'green' as const
   },
   {
     href: '/manage',
-    icon: ClipboardList,
+    icon: FolderOpen,
     title: 'จัดการข้อมูล',
     subtitle: 'Data Management',
-    description: 'ดู ค้นหา และจัดการข้อมูลทั้งหมด<br />View, search and manage all data',
+    description: 'ค้นหาและจัดการข้อมูลทั้งหมด<br />Search and manage all data',
     color: 'purple' as const
   }
 ];

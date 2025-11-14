@@ -6,11 +6,15 @@ export function InfoSection() {
       <ul className="space-y-2 text-sm text-gray-700">
         <li className="flex items-start gap-2">
           <span className="text-blue-600 mt-0.5">•</span>
-          <span>เลือก <strong>แบบฟอร์มผู้ใหญ่</strong> หรือ <strong>แบบฟอร์มเด็ก</strong> เพื่อบันทึกข้อมูลผู้ป่วยใหม่</span>
+          <span>เลือก <strong>แบบประเมิน</strong> เพื่อบันทึกข้อมูลการประเมินผู้ป่วยใหม่</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-blue-600 mt-0.5">•</span>
-          <span>เลือก <strong>จัดการข้อมูล</strong> เพื่อดูและค้นหาข้อมูลผู้ป่วยที่บันทึกไว้</span>
+          <span>เลือก <strong>รายงาน</strong> เพื่อดูสรุปและวิเคราะห์ข้อมูล</span>
+        </li>
+        <li className="flex items-start gap-2">
+          <span className="text-blue-600 mt-0.5">•</span>
+          <span>เลือก <strong>จัดการข้อมูล</strong> เพื่อค้นหาและแก้ไขข้อมูลที่บันทึกไว้</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-blue-600 mt-0.5">•</span>
