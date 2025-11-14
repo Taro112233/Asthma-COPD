@@ -106,22 +106,22 @@ export function FilterPanel({
             className="h-9"
           />
         </div>
-      </div>
 
-      {/* Clear Filters Button */}
-      {hasActiveFilters && (
-        <div className="mt-3 pt-3 border-t">
+        {/* Clear Filters Button - ย้ายมาอยู่แถวเดียวกัน */}
+        <div className="space-y-1">
+          <Label className="text-xs invisible">Action</Label>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            disabled={!hasActiveFilters}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 w-full"
           >
             <X className="h-4 w-4 mr-1" />
             ล้างตัวกรอง
           </Button>
         </div>
-      )}
+      </div>
     </div>
   );
 }

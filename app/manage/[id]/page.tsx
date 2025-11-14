@@ -253,10 +253,10 @@ Other: ${assessment.drps || '-'}
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => router.push(`/form?edit=${assessment.id}`)}
+              onClick={() => router.push(`/form`)}
             >
               <Edit className="h-4 w-4 mr-2" />
-              แก้ไข
+              แบบฟอร์ม
             </Button>
             <Button
               variant="destructive"

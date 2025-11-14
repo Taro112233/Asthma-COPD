@@ -1,7 +1,7 @@
 // app/manage/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Home, RefreshCw } from "lucide-react";
@@ -12,6 +12,43 @@ import { FilterPanel } from "@/components/manage/filter-panel";
 import { StatsCards } from "@/components/manage/stats-cards";
 import { toast } from "sonner";
 
+// ✅ ใช้ interface แบบเต็มให้ตรงกับ assessment-table.tsx
+interface Assessment {
+  id: string;
+  assessmentDate: string;
+  primaryDiagnosis: string | null;
+  compliancePercent: number | null;
+  assessedBy: string | null;
+  createdAt: string;
+  note: string | null;
+  hasSideEffects: boolean;
+  sideEffects: string[];
+  sideEffectsOther: string | null;
+  sideEffectsManagement: string | null;
+  drps: string | null;
+  medicationStatus: string | null;
+  medications: any;
+  techniqueCorrect: boolean | null;
+  techniqueSteps: any;
+  asthmaData?: {
+    controlLevel?: string;
+  };
+  copdData?: {
+    stage?: string;
+  };
+  arData?: {
+    symptoms?: string;
+    severity?: string;
+    pattern?: string;
+  };
+  patient: {
+    hospitalNumber: string;
+    firstName: string | null;
+    lastName: string | null;
+    age: number | null;
+  };
+}
+
 interface Stats {
   totalAssessments: number;
   totalPatients: number;
@@ -19,26 +56,27 @@ interface Stats {
   diagnosisBreakdown: Record<string, number>;
 }
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function ManagePage() {
   const router = useRouter();
   const { username, handleLogout } = useAuth();
   
-  const [assessments, setAssessments] = useState([]);
-  const [stats, setStats] = useState<Stats>({
-    totalAssessments: 0,
-    totalPatients: 0,
-    recentAssessments: 0,
-    diagnosisBreakdown: {}
-  });
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Filter states
   const [search, setSearch] = useState("");
   const [diagnosis, setDiagnosis] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(getTodayDateString());
+  const [dateTo, setDateTo] = useState(getTodayDateString());
 
-  // ✅ แก้ไขตรงนี้
   const hasActiveFilters = Boolean(
     search ||
     diagnosis !== "all" ||
@@ -46,30 +84,49 @@ export default function ManagePage() {
     dateTo
   );
 
+  // คำนวณ stats จาก assessments ที่ได้จากการกรอง
+  const filteredStats = useMemo(() => {
+    const totalAssessments = assessments.length;
+
+    const uniquePatients = new Set(assessments.map(a => a.patient.hospitalNumber));
+    const totalPatients = uniquePatients.size;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentAssessments = assessments.filter(
+      a => new Date(a.assessmentDate) >= sevenDaysAgo
+    ).length;
+
+    const diagnosisBreakdown: Record<string, number> = {};
+    assessments.forEach(a => {
+      if (a.primaryDiagnosis) {
+        diagnosisBreakdown[a.primaryDiagnosis] = 
+          (diagnosisBreakdown[a.primaryDiagnosis] || 0) + 1;
+      }
+    });
+
+    return {
+      totalAssessments,
+      totalPatients,
+      recentAssessments,
+      diagnosisBreakdown,
+    };
+  }, [assessments]);
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Build query params
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (diagnosis !== 'all') params.append('diagnosis', diagnosis);
       if (dateFrom) params.append('dateFrom', dateFrom);
       if (dateTo) params.append('dateTo', dateTo);
 
-      // Fetch assessments and stats in parallel
-      const [assessmentsRes, statsRes] = await Promise.all([
-        fetch(`/api/admin/assessments?${params.toString()}`),
-        fetch('/api/admin/stats')
-      ]);
+      const res = await fetch(`/api/admin/assessments?${params.toString()}`);
 
-      if (assessmentsRes.ok) {
-        const data = await assessmentsRes.json();
+      if (res.ok) {
+        const data = await res.json();
         setAssessments(data);
-      }
-
-      if (statsRes.ok) {
-        const statsData = await statsRes.json();
-        setStats(statsData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -126,10 +183,11 @@ export default function ManagePage() {
 
         {/* Stats Cards */}
         <StatsCards
-          totalAssessments={stats.totalAssessments}
-          totalPatients={stats.totalPatients}
-          recentAssessments={stats.recentAssessments}
-          diagnosisBreakdown={stats.diagnosisBreakdown}
+          totalAssessments={filteredStats.totalAssessments}
+          totalPatients={filteredStats.totalPatients}
+          recentAssessments={filteredStats.recentAssessments}
+          diagnosisBreakdown={filteredStats.diagnosisBreakdown}
+          isFiltered={hasActiveFilters}
         />
 
         {/* Filter Panel */}

@@ -41,6 +41,27 @@ interface Assessment {
   compliancePercent: number | null;
   assessedBy: string | null;
   createdAt: string;
+  note: string | null;
+  hasSideEffects: boolean;
+  sideEffects: string[];
+  sideEffectsOther: string | null;
+  sideEffectsManagement: string | null;
+  drps: string | null;
+  medicationStatus: string | null;
+  medications: any;
+  techniqueCorrect: boolean | null;
+  techniqueSteps: any;
+  asthmaData?: {
+    controlLevel?: string;
+  };
+  copdData?: {
+    stage?: string;
+  };
+  arData?: {
+    symptoms?: string;
+    severity?: string;
+    pattern?: string;
+  };
   patient: {
     hospitalNumber: string;
     firstName: string | null;
@@ -65,6 +86,144 @@ const DIAGNOSIS_LABELS: Record<string, string> = {
   'BRONCHIECTASIS': 'BRONCHIECTASIS',
   'ALLERGIC_RHINITIS': 'AR',
   'GERD': 'GERD',
+};
+
+// Level labels
+const getControlLevel = (assessment: Assessment) => {
+  if (assessment.asthmaData?.controlLevel) {
+    const level = assessment.asthmaData.controlLevel;
+    if (level === 'WELL') return 'Well controlled';
+    if (level === 'PARTLY') return 'Partly controlled';
+    if (level === 'UNCONTROLLED') return 'Uncontrolled';
+  }
+  if (assessment.copdData?.stage) {
+    return `Stage ${assessment.copdData.stage}`;
+  }
+  return '-';
+};
+
+// ✅ Function สำหรับ generate เทคนิคพ่นยาในรูปแบบข้อความ
+const generateTechniqueText = (assessment: Assessment) => {
+  if (assessment.techniqueCorrect) {
+    return 'ถูกต้องทุกขั้นตอน';
+  }
+
+  const steps = assessment.techniqueSteps || {};
+  
+  const allDevices = new Set<string>();
+  Object.values(steps).forEach((devices: any) => {
+    if (devices && typeof devices === 'object') {
+      Object.keys(devices).forEach(device => allDevices.add(device));
+    }
+  });
+
+  if (allDevices.size === 0) {
+    return '-';
+  }
+
+  const deviceResults: string[] = [];
+
+  allDevices.forEach(device => {
+    let hasAnyStatus = false;
+    let allCorrect = true;
+    const incorrectDetails: string[] = [];
+
+    Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+      if (devices && devices[device]) {
+        hasAnyStatus = true;
+        const status = devices[device].status;
+        const note = devices[device].note;
+
+        if (status === 'incorrect') {
+          allCorrect = false;
+          if (note && note.trim()) {
+            incorrectDetails.push(note.trim());
+          }
+        }
+      }
+    });
+
+    if (!hasAnyStatus) {
+      deviceResults.push(`${device}: -`);
+    } else if (allCorrect) {
+      deviceResults.push(`${device}: ถูกต้องทุกขั้นตอน`);
+    } else {
+      const details = incorrectDetails.length > 0 
+        ? incorrectDetails.join(', ')
+        : 'มีข้อผิดพลาด';
+      deviceResults.push(`${device}: ${details}`);
+    }
+  });
+
+  return deviceResults.join('; ');
+};
+
+// ✅ Function สำหรับ format ADR
+const formatADR = (assessment: Assessment) => {
+  if (!assessment.hasSideEffects) {
+    return 'ไม่มี';
+  }
+
+  const sideEffectLabels: Record<string, string> = {
+    'ORAL_CANDIDIASIS': 'เชื้อราในปาก',
+    'HOARSE_VOICE': 'เสียงแหบ',
+    'PALPITATION': 'ใจสั่น'
+  };
+
+  const effects = [
+    ...(assessment.sideEffects || []).map(se => sideEffectLabels[se] || se),
+    assessment.sideEffectsOther || ''
+  ].filter(Boolean).join(', ');
+
+  const management = assessment.sideEffectsManagement 
+    ? ` (การจัดการ: ${assessment.sideEffectsManagement})` 
+    : '';
+
+  return effects + management;
+};
+
+// ✅ Function สำหรับ format ยาเหลือ
+const formatMedications = (assessment: Assessment) => {
+  if (assessment.medicationStatus !== 'HAS_REMAINING') {
+    return 'ไม่เหลือ';
+  }
+
+  if (assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0) {
+    return (assessment.medications as Array<{name: string; quantity: number}>)
+      .map(med => `${med.name} (${med.quantity})`)
+      .join(', ');
+  }
+
+  return 'มี';
+};
+
+// ✅ Function สำหรับ generate ข้อมูลการประเมินแบบเต็ม
+const generateAssessmentReport = (assessment: Assessment) => {
+  const controlLevel = assessment.asthmaData?.controlLevel 
+    ? assessment.asthmaData.controlLevel === 'WELL' 
+      ? 'Well controlled (0 ข้อ)'
+      : assessment.asthmaData.controlLevel === 'PARTLY'
+      ? 'Partly controlled (1-2 ข้อ)'
+      : 'Uncontrolled (3-4 ข้อ)'
+    : assessment.copdData?.stage 
+    ? `Stage ${assessment.copdData.stage}`
+    : '-';
+
+  const arInfo = assessment.arData?.symptoms || '-';
+  const arDetails = assessment.arData?.severity || assessment.arData?.pattern
+    ? ` (${[assessment.arData.severity, assessment.arData.pattern].filter(Boolean).join(', ')})`
+    : '';
+
+  return `Asthma/COPD ambulatory: ${assessment.assessedBy || '-'}
+Dx: ${assessment.primaryDiagnosis ? DIAGNOSIS_LABELS[assessment.primaryDiagnosis] || assessment.primaryDiagnosis : '-'}
+Level of controlled: ${controlLevel}
+Note/Risk factor: ${assessment.note || '-'}
+AR: ${arInfo}${arDetails}
+เทคนิคพ่นยา: ${generateTechniqueText(assessment)}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+ADR: ${formatADR(assessment)}
+Other: ${assessment.drps || '-'}
+ยาเหลือ: ${formatMedications(assessment)}`;
 };
 
 export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps) {
@@ -140,16 +299,18 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
 
     const exportData = selectedAssessments.map((assessment, index) => ({
       "ลำดับ": index + 1,
-      "HN": assessment.patient.hospitalNumber,
-      "ชื่อ-สกุล": `${assessment.patient.firstName || ''} ${assessment.patient.lastName || ''}`.trim(),
-      "อายุ": assessment.patient.age || '-',
       "วันที่ประเมิน": new Date(assessment.assessmentDate).toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       }),
+      "HN": assessment.patient.hospitalNumber,
+      "ชื่อ-สกุล": `${assessment.patient.firstName || ''} ${assessment.patient.lastName || ''}`.trim(),
+      "อายุ": assessment.patient.age || '-',
       "โรคหลัก": DIAGNOSIS_LABELS[assessment.primaryDiagnosis || ''] || '-',
+      "Level": getControlLevel(assessment),
       "Compliance %": assessment.compliancePercent || 0,
+      "ข้อมูลการประเมิน": generateAssessmentReport(assessment), // ✅ เพิ่มคอลัมน์นี้
       "ประเมินโดย": assessment.assessedBy || '-',
       "วันที่บันทึก": new Date(assessment.createdAt).toLocaleString('th-TH', {
         year: 'numeric',
@@ -161,6 +322,23 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    // ✅ ปรับความกว้างคอลัมน์
+    const columnWidths = [
+      { wch: 8 },  // ลำดับ
+      { wch: 15 }, // วันที่ประเมิน
+      { wch: 12 }, // HN
+      { wch: 25 }, // ชื่อ-สกุล
+      { wch: 8 },  // อายุ
+      { wch: 15 }, // โรคหลัก
+      { wch: 20 }, // Level
+      { wch: 12 }, // Compliance
+      { wch: 80 }, // ข้อมูลการประเมิน (กว้างมาก)
+      { wch: 15 }, // ประเมินโดย
+      { wch: 20 }, // วันที่บันทึก
+    ];
+    ws['!cols'] = columnWidths;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Assessments");
 
@@ -239,6 +417,15 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer select-none"
+                  onClick={() => handleSort('assessmentDate')}
+                >
+                  <div className="flex items-center">
+                    วันที่
+                    {getSortIcon('assessmentDate')}
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer select-none"
                   onClick={() => handleSort('hospitalNumber')}
                 >
                   <div className="flex items-center">
@@ -246,16 +433,8 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                     {getSortIcon('hospitalNumber')}
                   </div>
                 </TableHead>
-                <TableHead 
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort('assessmentDate')}
-                >
-                  <div className="flex items-center">
-                    วันที่ประเมิน
-                    {getSortIcon('assessmentDate')}
-                  </div>
-                </TableHead>
                 <TableHead>โรคหลัก</TableHead>
+                <TableHead>Level</TableHead>
                 <TableHead 
                   className="cursor-pointer select-none"
                   onClick={() => handleSort('compliancePercent')}
@@ -265,14 +444,13 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                     {getSortIcon('compliancePercent')}
                   </div>
                 </TableHead>
-                <TableHead>ประเมินโดย</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAssessments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     ไม่พบข้อมูล
                   </TableCell>
                 </TableRow>
@@ -292,19 +470,19 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                         onCheckedChange={() => toggleSelection(assessment.id)}
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{assessment.patient.hospitalNumber}</div>
-                      <div className="text-sm text-gray-500">
-                        {assessment.patient.firstName} {assessment.patient.lastName}
-                        {assessment.patient.age && ` (${assessment.patient.age} ปี)`}
-                      </div>
-                    </TableCell>
                     <TableCell className="text-sm">
                       {new Date(assessment.assessmentDate).toLocaleDateString('th-TH', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric'
                       })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{assessment.patient.hospitalNumber}</div>
+                      <div className="text-sm text-gray-500">
+                        {assessment.patient.firstName} {assessment.patient.lastName}
+                        {assessment.patient.age && ` (${assessment.patient.age} ปี)`}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {assessment.primaryDiagnosis ? (
@@ -315,13 +493,13 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
                         <span className="text-gray-400">-</span>
                       )}
                     </TableCell>
+                    <TableCell className="text-sm">
+                      {getControlLevel(assessment)}
+                    </TableCell>
                     <TableCell>
                       <span className="font-medium">
                         {assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
                       </span>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-600">
-                      {assessment.assessedBy || '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center">
