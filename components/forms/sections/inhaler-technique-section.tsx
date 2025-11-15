@@ -23,7 +23,7 @@ interface InhalerTechniqueSectionProps {
   onTechniqueChange: (data: Partial<InhalerTechniqueData>) => void;
 }
 
-const DEVICES = ['MDI', 'TURBO', 'ACCU', 'NS', 'HAND', 'ELLIPTA', 'SPIOLTO'];
+const DEVICES = ['MDI', 'TURBU', 'ACCU', 'NS', 'HAND', 'ELLIPTA', 'SPIOLTO'];
 const STEPS = ['Prepare', 'Inhale', 'Rinse', 'Empty'];
 const SPACER_OPTIONS = [
   { value: 'MOUTH_PIECE', label: 'Mouth-piece' },

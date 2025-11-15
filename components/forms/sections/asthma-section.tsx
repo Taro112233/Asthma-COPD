@@ -2,7 +2,7 @@
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AsthmaData {
   pef: string;
@@ -21,6 +21,15 @@ interface AsthmaSectionProps {
 }
 
 export function AsthmaSection({ asthma, onAsthmaChange }: AsthmaSectionProps) {
+  const handleControlLevelChange = (value: string) => {
+    // If clicking the same option, deselect it
+    if (asthma.controlLevel === value) {
+      onAsthmaChange({ controlLevel: '' });
+    } else {
+      onAsthmaChange({ controlLevel: value });
+    }
+  };
+
   return (
     <Card className="row-span-2 col-start-1 row-start-4 p-2 h-full">
       <Label className="text-xs font-semibold mb-0.5 block">Asthma</Label>
@@ -74,30 +83,38 @@ export function AsthmaSection({ asthma, onAsthmaChange }: AsthmaSectionProps) {
         
         <div>
           <Label className="text-xs mb-0.5 block">Level of controlled</Label>
-          <RadioGroup
-            value={asthma.controlLevel}
-            onValueChange={(value) => onAsthmaChange({ controlLevel: value })}
-            className="space-y-1"
-          >
+          <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="WELL" id="control-well" />
+              <Checkbox 
+                id="control-well"
+                checked={asthma.controlLevel === 'WELL'}
+                onCheckedChange={() => handleControlLevelChange('WELL')}
+              />
               <Label htmlFor="control-well" className="text-xs cursor-pointer">
                 Well controlled (0 ข้อ)
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="PARTLY" id="control-partly" />
+              <Checkbox 
+                id="control-partly"
+                checked={asthma.controlLevel === 'PARTLY'}
+                onCheckedChange={() => handleControlLevelChange('PARTLY')}
+              />
               <Label htmlFor="control-partly" className="text-xs cursor-pointer">
                 Partly (1 - 2 ข้อ)
               </Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="UNCONTROLLED" id="control-uncontrolled" />
+              <Checkbox 
+                id="control-uncontrolled"
+                checked={asthma.controlLevel === 'UNCONTROLLED'}
+                onCheckedChange={() => handleControlLevelChange('UNCONTROLLED')}
+              />
               <Label htmlFor="control-uncontrolled" className="text-xs cursor-pointer">
                 Uncontrolled (3 - 4 ข้อ)
               </Label>
             </div>
-          </RadioGroup>
+          </div>
         </div>
       </div>
     </Card>
