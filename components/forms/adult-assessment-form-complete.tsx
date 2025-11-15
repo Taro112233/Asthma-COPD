@@ -123,7 +123,7 @@ interface FormData {
   };
   drps: string;
   sideEffects: {
-    hasSideEffects: boolean;
+    hasSideEffects: boolean | null;
     oralCandidiasis: boolean;
     hoarseVoice: boolean;
     palpitation: boolean;
@@ -224,7 +224,7 @@ const getInitialFormData = (): FormData => ({
   },
   drps: "",
   sideEffects: {
-    hasSideEffects: false,
+    hasSideEffects: null,
     oralCandidiasis: false,
     hoarseVoice: false,
     palpitation: false,
@@ -417,7 +417,7 @@ export function AdultAssessmentFormComplete() {
             },
           },
           technique: {
-            techniqueCorrect: assessment.techniqueCorrect || false,
+            techniqueCorrect: assessment.techniqueCorrect || null,
             techniqueSteps: assessment.techniqueSteps || {
               prepare: {},
               inhale: {},
@@ -450,7 +450,7 @@ export function AdultAssessmentFormComplete() {
           },
           drps: assessment.drps || "",
           sideEffects: {
-            hasSideEffects: assessment.hasSideEffects || false,
+            hasSideEffects: assessment.hasSideEffects || null,
             oralCandidiasis:
               assessment.sideEffects?.includes("ORAL_CANDIDIASIS") || false,
             hoarseVoice:

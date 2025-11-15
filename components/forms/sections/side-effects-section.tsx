@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface SideEffectsData {
-  hasSideEffects: boolean;
+  hasSideEffects: boolean | null; // --- CHANGED: Allow null ---
   oralCandidiasis: boolean;
   hoarseVoice: boolean;
   palpitation: boolean;
@@ -29,22 +29,36 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
     <Card className="col-span-2 col-start-3 row-start-5 p-2 h-full">
       <div className="space-y-1">
         <div className="flex gap-4">
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center">
             <Label className="text-xs font-semibold mb-0.5 block">C. ผลข้างเคียงจากการใช้ยา</Label>
-            <Checkbox
-              checked={sideEffects.hasSideEffects === true}
-              onCheckedChange={(checked) => onSideEffectsChange({ hasSideEffects: !!checked })}
-              id="se-yes"
-            />
-            <Label htmlFor="se-yes" className="text-xs">เกิด</Label>
           </div>
+
+          {/* "ไม่เกิด" (Not Occurred) */}
           <div className="flex items-center space-x-1.5">
             <Checkbox
+              // --- CHANGED: Check only if explicitly false ---
               checked={sideEffects.hasSideEffects === false}
-              onCheckedChange={(checked) => onSideEffectsChange({ hasSideEffects: !checked })}
+              // --- CHANGED: Set to false if checked, null if unchecked ---
+              onCheckedChange={(checked) =>
+                onSideEffectsChange({ hasSideEffects: checked ? false : null })
+              }
               id="se-no"
             />
             <Label htmlFor="se-no" className="text-xs">ไม่เกิด</Label>
+          </div>
+
+          {/* "เกิด" (Occurred) */}
+          <div className="flex items-center space-x-1.5">
+            <Checkbox
+              // --- CHANGED: Check only if explicitly true ---
+              checked={sideEffects.hasSideEffects === true}
+              // --- CHANGED: Set to true if checked, null if unchecked ---
+              onCheckedChange={(checked) =>
+                onSideEffectsChange({ hasSideEffects: checked ? true : null })
+              }
+              id="se-yes"
+            />
+            <Label htmlFor="se-yes" className="text-xs">เกิด</Label>
           </div>
         </div>
 

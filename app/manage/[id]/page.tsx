@@ -94,23 +94,38 @@ export default function AssessmentDetailPage() {
     }
   };
 
-  // ✅ Function สำหรับ generate เทคนิคพ่นยา
   const generateTechniqueText = () => {
     if (assessment.techniqueCorrect) {
-      return 'ถูกต้องทุกขั้นตอน';
+      const steps = assessment.techniqueSteps || {};
+      const allDevices = new Set<string>();
+      
+      Object.values(steps).forEach((devices: any) => {
+        if (devices && typeof devices === 'object') {
+          Object.keys(devices).forEach(device => allDevices.add(device));
+        }
+      });
+
+      if (allDevices.size === 0) {
+        return 'ถูกต้องทุกขั้นตอน';
+      }
+
+      const deviceResults: string[] = [];
+      allDevices.forEach(device => {
+        deviceResults.push(`${device}: ถูกต้องทุกขั้นตอน`);
+      });
+
+      return deviceResults.join(', ');
     }
 
     const steps = assessment.techniqueSteps || {};
-    
-    // รวบรวมข้อมูลทุก device ที่มีในฐานข้อมูล
     const allDevices = new Set<string>();
+    
     Object.values(steps).forEach((devices: any) => {
       if (devices && typeof devices === 'object') {
         Object.keys(devices).forEach(device => allDevices.add(device));
       }
     });
 
-    // ถ้าไม่มี device เลย
     if (allDevices.size === 0) {
       return '-';
     }
@@ -122,7 +137,6 @@ export default function AssessmentDetailPage() {
       let allCorrect = true;
       const incorrectDetails: string[] = [];
 
-      // ตรวจสอบทุก step ของ device นี้
       Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
         if (devices && devices[device]) {
           hasAnyStatus = true;
@@ -131,7 +145,6 @@ export default function AssessmentDetailPage() {
 
           if (status === 'incorrect') {
             allCorrect = false;
-            // ถ้ามี note ให้เอา note มาแสดง ถ้าไม่มีแสดงชื่อ step
             if (note && note.trim()) {
               incorrectDetails.push(note.trim());
             }
@@ -139,16 +152,11 @@ export default function AssessmentDetailPage() {
         }
       });
 
-      // ถ้าไม่มีการประเมินเลย
       if (!hasAnyStatus) {
         deviceResults.push(`${device}: -`);
-      }
-      // ถ้าถูกหมดทุกขั้นตอน
-      else if (allCorrect) {
+      } else if (allCorrect) {
         deviceResults.push(`${device}: ถูกต้องทุกขั้นตอน`);
-      }
-      // ถ้ามีข้อผิดพลาด
-      else {
+      } else {
         const details = incorrectDetails.length > 0 
           ? incorrectDetails.join(', ')
           : 'มีข้อผิดพลาด';
@@ -156,7 +164,21 @@ export default function AssessmentDetailPage() {
       }
     });
 
-    return deviceResults.join('; ');
+    return deviceResults.join(', ');
+  };
+
+  const generateComplianceReasonText = () => {
+    const reasons: string[] = [];
+    
+    if (assessment.nonComplianceReasons.includes('LESS_THAN') && assessment.lessThanDetail) {
+      reasons.push(`น้อยกว่า ${assessment.lessThanDetail}`);
+    }
+    
+    if (assessment.nonComplianceReasons.includes('MORE_THAN') && assessment.moreThanDetail) {
+      reasons.push(`มากกว่า ${assessment.moreThanDetail}`);
+    }
+    
+    return reasons.length > 0 ? `\nเหตุผล: ${reasons.join('; ')}` : '';
   };
 
   const handleCopyReport = async () => {
@@ -181,7 +203,7 @@ AR: ${assessment.arData?.symptoms || '-'}${
     : ''
 }
 เทคนิคพ่นยา: ${generateTechniqueText()}
-Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}${generateComplianceReasonText()}
 ADR: ${
   assessment.hasSideEffects
     ? [
@@ -233,7 +255,6 @@ Other: ${assessment.drps || '-'}
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
             <Button
@@ -269,7 +290,6 @@ Other: ${assessment.drps || '-'}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Patient Info */}
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle>ข้อมูลผู้ป่วย</CardTitle>
@@ -318,7 +338,6 @@ Other: ${assessment.drps || '-'}
             </CardContent>
           </Card>
 
-          {/* Assessment Info */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -366,7 +385,7 @@ AR: ${assessment.arData?.symptoms || '-'}${
     : ''
 }
 เทคนิคพ่นยา: ${generateTechniqueText()}
-Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}${generateComplianceReasonText()}
 ADR: ${
   assessment.hasSideEffects
     ? [
@@ -399,7 +418,6 @@ Other: ${assessment.drps || '-'}
         </div>
       </div>
 
-      {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

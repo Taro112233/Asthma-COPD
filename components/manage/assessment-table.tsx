@@ -51,6 +51,9 @@ interface Assessment {
   medications: any;
   techniqueCorrect: boolean | null;
   techniqueSteps: any;
+  nonComplianceReasons: string[];
+  lessThanDetail: string | null;
+  moreThanDetail: string | null;
   asthmaData?: {
     controlLevel?: string;
   };
@@ -78,7 +81,6 @@ interface AssessmentTableProps {
   onRefresh: () => Promise<void>;
 }
 
-// Diagnosis labels in Thai
 const DIAGNOSIS_LABELS: Record<string, string> = {
   'ASTHMA': 'ASTHMA',
   'COPD': 'COPD',
@@ -88,7 +90,6 @@ const DIAGNOSIS_LABELS: Record<string, string> = {
   'GERD': 'GERD',
 };
 
-// Level labels
 const getControlLevel = (assessment: Assessment) => {
   if (assessment.asthmaData?.controlLevel) {
     const level = assessment.asthmaData.controlLevel;
@@ -102,15 +103,32 @@ const getControlLevel = (assessment: Assessment) => {
   return '-';
 };
 
-// ✅ Function สำหรับ generate เทคนิคพ่นยาในรูปแบบข้อความ
 const generateTechniqueText = (assessment: Assessment) => {
   if (assessment.techniqueCorrect) {
-    return 'ถูกต้องทุกขั้นตอน';
+    const steps = assessment.techniqueSteps || {};
+    const allDevices = new Set<string>();
+    
+    Object.values(steps).forEach((devices: any) => {
+      if (devices && typeof devices === 'object') {
+        Object.keys(devices).forEach(device => allDevices.add(device));
+      }
+    });
+
+    if (allDevices.size === 0) {
+      return 'ถูกต้องทุกขั้นตอน';
+    }
+
+    const deviceResults: string[] = [];
+    allDevices.forEach(device => {
+      deviceResults.push(`${device}: ถูกต้องทุกขั้นตอน`);
+    });
+
+    return deviceResults.join(', ');
   }
 
   const steps = assessment.techniqueSteps || {};
-  
   const allDevices = new Set<string>();
+  
   Object.values(steps).forEach((devices: any) => {
     if (devices && typeof devices === 'object') {
       Object.keys(devices).forEach(device => allDevices.add(device));
@@ -155,10 +173,23 @@ const generateTechniqueText = (assessment: Assessment) => {
     }
   });
 
-  return deviceResults.join('; ');
+  return deviceResults.join(', ');
 };
 
-// ✅ Function สำหรับ format ADR
+const generateComplianceReasonText = (assessment: Assessment) => {
+  const reasons: string[] = [];
+  
+  if (assessment.nonComplianceReasons?.includes('LESS_THAN') && assessment.lessThanDetail) {
+    reasons.push(`น้อยกว่า ${assessment.lessThanDetail}`);
+  }
+  
+  if (assessment.nonComplianceReasons?.includes('MORE_THAN') && assessment.moreThanDetail) {
+    reasons.push(`มากกว่า ${assessment.moreThanDetail}`);
+  }
+  
+  return reasons.length > 0 ? `\nเหตุผล: ${reasons.join('; ')}` : '';
+};
+
 const formatADR = (assessment: Assessment) => {
   if (!assessment.hasSideEffects) {
     return 'ไม่มี';
@@ -182,7 +213,6 @@ const formatADR = (assessment: Assessment) => {
   return effects + management;
 };
 
-// ✅ Function สำหรับ format ยาเหลือ
 const formatMedications = (assessment: Assessment) => {
   if (assessment.medicationStatus !== 'HAS_REMAINING') {
     return 'ไม่เหลือ';
@@ -197,7 +227,6 @@ const formatMedications = (assessment: Assessment) => {
   return 'มี';
 };
 
-// ✅ Function สำหรับ generate ข้อมูลการประเมินแบบเต็ม
 const generateAssessmentReport = (assessment: Assessment) => {
   const controlLevel = assessment.asthmaData?.controlLevel 
     ? assessment.asthmaData.controlLevel === 'WELL' 
@@ -220,7 +249,7 @@ Level of controlled: ${controlLevel}
 Note/Risk factor: ${assessment.note || '-'}
 AR: ${arInfo}${arDetails}
 เทคนิคพ่นยา: ${generateTechniqueText(assessment)}
-Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}
+Patient Compliance: ${assessment.compliancePercent !== null ? `${assessment.compliancePercent}%` : '-'}${generateComplianceReasonText(assessment)}
 ADR: ${formatADR(assessment)}
 Other: ${assessment.drps || '-'}
 ยาเหลือ: ${formatMedications(assessment)}`;
@@ -310,7 +339,7 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
       "โรคหลัก": DIAGNOSIS_LABELS[assessment.primaryDiagnosis || ''] || '-',
       "Level": getControlLevel(assessment),
       "Compliance %": assessment.compliancePercent || 0,
-      "ข้อมูลการประเมิน": generateAssessmentReport(assessment), // ✅ เพิ่มคอลัมน์นี้
+      "ข้อมูลการประเมิน": generateAssessmentReport(assessment),
       "ประเมินโดย": assessment.assessedBy || '-',
       "วันที่บันทึก": new Date(assessment.createdAt).toLocaleString('th-TH', {
         year: 'numeric',
@@ -323,19 +352,18 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     
-    // ✅ ปรับความกว้างคอลัมน์
     const columnWidths = [
-      { wch: 8 },  // ลำดับ
-      { wch: 15 }, // วันที่ประเมิน
-      { wch: 12 }, // HN
-      { wch: 25 }, // ชื่อ-สกุล
-      { wch: 8 },  // อายุ
-      { wch: 15 }, // โรคหลัก
-      { wch: 20 }, // Level
-      { wch: 12 }, // Compliance
-      { wch: 80 }, // ข้อมูลการประเมิน (กว้างมาก)
-      { wch: 15 }, // ประเมินโดย
-      { wch: 20 }, // วันที่บันทึก
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 25 },
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 80 },
+      { wch: 15 },
+      { wch: 20 },
     ];
     ws['!cols'] = columnWidths;
 
@@ -383,7 +411,6 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
 
   return (
     <>
-      {/* Action Buttons */}
       <div className="flex gap-2 mb-4">
         <Button
           onClick={handleExportSelected}
@@ -403,7 +430,6 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
         </Button>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
@@ -520,7 +546,6 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

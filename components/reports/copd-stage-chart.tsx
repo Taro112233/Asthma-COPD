@@ -18,40 +18,37 @@ interface COPDStageChartProps {
 
 const COLORS = {
   stageA: '#10b981',   // green-500
-  stageB: '#3b82f6',   // blue-500
-  stageC: '#f59e0b',   // amber-500
-  stageD: '#ef4444',   // red-500
+  stageB: '#f59e0b',   // amber-500
+  stageE: '#ef4444',   // red-500
 };
 
 export function COPDStageChart({ data }: COPDStageChartProps) {
+  // ✅ รวม stageC + stageD = stageE (≥2 exacerbations)
+  const stageE = (data.stageC || 0) + (data.stageD || 0);
+  
+  // ✅ แสดง 3 แท่งเสมอ ไม่ filter
   const chartData = [
     { 
       name: 'Stage A', 
-      value: data.stageA,
+      value: data.stageA || 0,
       color: COLORS.stageA,
-      description: 'Low risk, fewer symptoms'
+      description: 'mMRC 0-1, CAT <10, 0-1 exacerbation'
     },
     { 
       name: 'Stage B', 
-      value: data.stageB,
+      value: data.stageB || 0,
       color: COLORS.stageB,
-      description: 'Low risk, more symptoms'
+      description: 'mMRC ≥2, CAT ≥10, 0-1 exacerbation'
     },
     { 
-      name: 'Stage C', 
-      value: data.stageC,
-      color: COLORS.stageC,
-      description: 'High risk, fewer symptoms'
-    },
-    { 
-      name: 'Stage D', 
-      value: data.stageD,
-      color: COLORS.stageD,
-      description: 'High risk, more symptoms'
+      name: 'Stage E', 
+      value: stageE,
+      color: COLORS.stageE,
+      description: '≥2 moderate exacerbation or ≥1 leading to hospitalization'
     },
   ];
 
-  const total = data.stageA + data.stageB + data.stageC + data.stageD;
+  const total = data.stageA + data.stageB + stageE;
 
   if (total === 0) {
     return (
@@ -85,11 +82,14 @@ export function COPDStageChart({ data }: COPDStageChartProps) {
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
+                  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
                   return (
                     <div className="bg-white p-3 border rounded shadow-lg">
-                      <p className="font-semibold">{data.name}</p>
-                      <p className="text-sm text-gray-600">{data.description}</p>
-                      <p className="font-medium mt-1">{data.value} รายการ</p>
+                      <p className="font-semibold text-lg">{data.name}</p>
+                      <p className="text-sm text-gray-600 mt-1">{data.description}</p>
+                      <p className="font-medium mt-2 text-blue-600">
+                        {data.value} รายการ ({percentage}%)
+                      </p>
                     </div>
                   );
                 }

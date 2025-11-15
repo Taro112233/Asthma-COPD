@@ -12,7 +12,7 @@ import { FilterPanel } from "@/components/manage/filter-panel";
 import { StatsCards } from "@/components/manage/stats-cards";
 import { toast } from "sonner";
 
-// ✅ ใช้ interface แบบเต็มให้ตรงกับ assessment-table.tsx
+// ✅ เพิ่ม properties ที่ขาดหายไป
 interface Assessment {
   id: string;
   assessmentDate: string;
@@ -30,6 +30,9 @@ interface Assessment {
   medications: any;
   techniqueCorrect: boolean | null;
   techniqueSteps: any;
+  nonComplianceReasons: string[];       // ✅ เพิ่ม
+  lessThanDetail: string | null;        // ✅ เพิ่ม
+  moreThanDetail: string | null;        // ✅ เพิ่ม
   asthmaData?: {
     controlLevel?: string;
   };
@@ -71,7 +74,6 @@ export default function ManagePage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Filter states
   const [search, setSearch] = useState("");
   const [diagnosis, setDiagnosis] = useState("all");
   const [dateFrom, setDateFrom] = useState(getTodayDateString());
@@ -84,7 +86,6 @@ export default function ManagePage() {
     dateTo
   );
 
-  // คำนวณ stats จาก assessments ที่ได้จากการกรอง
   const filteredStats = useMemo(() => {
     const totalAssessments = assessments.length;
 
@@ -152,7 +153,6 @@ export default function ManagePage() {
       <DashboardHeader username={username} onLogout={handleLogout} />
       
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -181,7 +181,6 @@ export default function ManagePage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <StatsCards
           totalAssessments={filteredStats.totalAssessments}
           totalPatients={filteredStats.totalPatients}
@@ -190,7 +189,6 @@ export default function ManagePage() {
           isFiltered={hasActiveFilters}
         />
 
-        {/* Filter Panel */}
         <FilterPanel
           search={search}
           diagnosis={diagnosis}
@@ -204,13 +202,11 @@ export default function ManagePage() {
           hasActiveFilters={hasActiveFilters}
         />
 
-        {/* Results Summary */}
         <div className="mb-3 text-sm text-gray-600">
           แสดง <span className="font-semibold text-gray-900">{assessments.length}</span> รายการ
           {hasActiveFilters && " (กรองแล้ว)"}
         </div>
 
-        {/* Assessment Table */}
         {isLoading ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400 mb-4" />
