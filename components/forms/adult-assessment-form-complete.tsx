@@ -329,154 +329,162 @@ export function AdultAssessmentFormComplete() {
     }
   };
 
-  const loadVisitData = async (visitId: string) => {
-    if (!visitId || visitId === "new") {
-      setIsEditMode(false);
-      setSelectedVisitId("new");
-      setOriginalAssessedBy("");
+  // components/forms/adult-assessment-form-complete.tsx
+// ส่วนที่ต้องแก้ไข
 
-      const newFormData = getInitialFormData();
-      if (patientData) {
-        newFormData.hospitalNumber = patientData.hospitalNumber;
-        newFormData.firstName = patientData.firstName || "";
-        newFormData.lastName = patientData.lastName || "";
-        newFormData.age = patientData.age?.toString() || "";
-      }
-      setFormData(newFormData);
-      return;
+const loadVisitData = async (visitId: string) => {
+  if (!visitId || visitId === "new") {
+    setIsEditMode(false);
+    setSelectedVisitId("new");
+    setOriginalAssessedBy("");
+
+    const newFormData = getInitialFormData();
+    if (patientData) {
+      newFormData.hospitalNumber = patientData.hospitalNumber;
+      newFormData.firstName = patientData.firstName || "";
+      newFormData.lastName = patientData.lastName || "";
+      newFormData.age = patientData.age?.toString() || "";
     }
+    setFormData(newFormData);
+    return;
+  }
 
-    setIsLoading(true);
-    try {
-      const res = await fetch(`/api/assessments/${visitId}`);
-      if (res.ok) {
-        const assessment = await res.json();
+  setIsLoading(true);
+  try {
+    const res = await fetch(`/api/assessments/${visitId}`);
+    if (res.ok) {
+      const assessment = await res.json();
 
-        setIsEditMode(true);
-        setOriginalAssessedBy(assessment.assessedBy || "ไม่ระบุ");
+      setIsEditMode(true);
+      setOriginalAssessedBy(assessment.assessedBy || "ไม่ระบุ");
 
-        setFormData({
-          assessmentDate: assessment.assessmentDate
-            ? new Date(assessment.assessmentDate).toISOString().split("T")[0]
-            : new Date().toISOString().split("T")[0],
-          hospitalNumber: assessment.patient.hospitalNumber || "",
-          firstName: assessment.patient.firstName || "",
-          lastName: assessment.patient.lastName || "",
-          age: assessment.patient.age?.toString() || "",
-          alcohol:
-            assessment.alcohol === true
-              ? "YES"
-              : assessment.alcohol === false
-              ? "NO"
-              : "",
-          alcoholAmount: assessment.alcoholAmount || "",
-          smoking:
-            assessment.smoking === true
-              ? "YES"
-              : assessment.smoking === false
-              ? "NO"
-              : "",
-          smokingAmount: assessment.smokingAmount || "",
-          primaryDiagnosis: assessment.primaryDiagnosis || "",
-          note: assessment.note || "",
-          asthma: {
-            pef: assessment.asthmaData?.pef || "",
-            pefPercent: assessment.asthmaData?.pefPercent || "",
-            day: assessment.asthmaData?.day || "",
-            night: assessment.asthmaData?.night || "",
-            rescue: assessment.asthmaData?.rescue || "",
-            er: assessment.asthmaData?.er || "",
-            admit: assessment.asthmaData?.admit || "",
-            controlLevel: assessment.asthmaData?.controlLevel || "",
-          },
-          copd: {
-            mMRC: assessment.copdData?.mMRC || "",
-            cat: assessment.copdData?.cat || "",
-            exacerbPerYear: assessment.copdData?.exacerbPerYear || "",
-            fev1: assessment.copdData?.fev1 || "",
-            sixMWD: assessment.copdData?.sixMWD || "",
-            stage: assessment.copdData?.stage || "",
-          },
-          ar: {
-            symptoms: assessment.arData?.symptoms || "",
-            severity: assessment.arData?.severity || "",
-            pattern: assessment.arData?.pattern || "",
-          },
-          compliance: {
-            complianceStatus: assessment.complianceStatus || "",
-            cannotAssessReason: assessment.cannotAssessReason || "",
-            compliancePercent: assessment.compliancePercent?.toString() || "",
-            nonComplianceReasons: {
-              incorrectTechnique:
-                assessment.nonComplianceReasons?.includes(
-                  "INCORRECT_TECHNIQUE"
-                ) || false,
-              incorrectDosage:
-                assessment.nonComplianceReasons?.includes("INCORRECT_DOSAGE") ||
-                false,
-            },
-          },
-          technique: {
-            techniqueCorrect: assessment.techniqueCorrect || null,
-            techniqueSteps: assessment.techniqueSteps || {
-              prepare: {},
-              inhale: {},
-              rinse: {},
-              empty: {},
-            },
-            spacerType: assessment.spacerType || "",
-          },
+      setFormData({
+        assessmentDate: assessment.assessmentDate
+          ? new Date(assessment.assessmentDate).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        hospitalNumber: assessment.patient.hospitalNumber || "",
+        firstName: assessment.patient.firstName || "",
+        lastName: assessment.patient.lastName || "",
+        age: assessment.patient.age?.toString() || "",
+        alcohol:
+          assessment.alcohol === true
+            ? "YES"
+            : assessment.alcohol === false
+            ? "NO"
+            : "",
+        alcoholAmount: assessment.alcoholAmount || "",
+        smoking:
+          assessment.smoking === true
+            ? "YES"
+            : assessment.smoking === false
+            ? "NO"
+            : "",
+        smokingAmount: assessment.smokingAmount || "",
+        primaryDiagnosis: assessment.primaryDiagnosis || "",
+        note: assessment.note || "",
+        asthma: {
+          pef: assessment.asthmaData?.pef || "",
+          pefPercent: assessment.asthmaData?.pefPercent || "",
+          day: assessment.asthmaData?.day || "",
+          night: assessment.asthmaData?.night || "",
+          rescue: assessment.asthmaData?.rescue || "",
+          er: assessment.asthmaData?.er || "",
+          admit: assessment.asthmaData?.admit || "",
+          controlLevel: assessment.asthmaData?.controlLevel || "",
+        },
+        copd: {
+          mMRC: assessment.copdData?.mMRC || "",
+          cat: assessment.copdData?.cat || "",
+          exacerbPerYear: assessment.copdData?.exacerbPerYear || "",
+          fev1: assessment.copdData?.fev1 || "",
+          sixMWD: assessment.copdData?.sixMWD || "",
+          stage: assessment.copdData?.stage || "",
+        },
+        ar: {
+          symptoms: assessment.arData?.symptoms || "",
+          severity: assessment.arData?.severity || "",
+          pattern: assessment.arData?.pattern || "",
+        },
+        compliance: {
+          complianceStatus: assessment.complianceStatus || "",
+          cannotAssessReason: assessment.cannotAssessReason || "",
+          compliancePercent: assessment.compliancePercent?.toString() || "",
           nonComplianceReasons: {
-            lessThan:
-              assessment.nonComplianceReasons?.includes("LESS_THAN") || false,
-            lessThanDetail: assessment.lessThanDetail || "",
-            moreThan:
-              assessment.nonComplianceReasons?.includes("MORE_THAN") || false,
-            moreThanDetail: assessment.moreThanDetail || "",
-            lackKnowledge:
-              assessment.nonComplianceReasons?.includes("LACK_KNOWLEDGE") ||
+            incorrectTechnique:
+              assessment.nonComplianceReasons?.includes(
+                "INCORRECT_TECHNIQUE"
+              ) || false,
+            incorrectDosage:
+              assessment.nonComplianceReasons?.includes("INCORRECT_DOSAGE") ||
               false,
-            notReadLabel:
-              assessment.nonComplianceReasons?.includes("NOT_READ_LABEL") ||
-              false,
-            elderly:
-              assessment.nonComplianceReasons?.includes("ELDERLY") || false,
-            forget:
-              assessment.nonComplianceReasons?.includes("FORGET") || false,
-            fearSideEffects:
-              assessment.nonComplianceReasons?.includes("FEAR_SIDE_EFFECTS") ||
-              false,
-            other: assessment.nonComplianceOther || "",
           },
-          drps: assessment.drps || "",
-          sideEffects: {
-            hasSideEffects: assessment.hasSideEffects || null,
-            oralCandidiasis:
-              assessment.sideEffects?.includes("ORAL_CANDIDIASIS") || false,
-            hoarseVoice:
-              assessment.sideEffects?.includes("HOARSE_VOICE") || false,
-            palpitation:
-              assessment.sideEffects?.includes("PALPITATION") || false,
-            other: assessment.sideEffectsOther || "",
-            management: assessment.sideEffectsManagement || "",
+        },
+        technique: {
+          // ✅ FIX: ต้องรักษา null state ไว้ ไม่ใช่ใช้ || null
+          techniqueCorrect: assessment.techniqueCorrect === true 
+            ? true 
+            : assessment.techniqueCorrect === false 
+            ? false 
+            : null,
+          techniqueSteps: assessment.techniqueSteps || {
+            prepare: {},
+            inhale: {},
+            rinse: {},
+            empty: {},
           },
-          medications: {
-            medicationStatus: assessment.medicationStatus || "",
-            items: assessment.medications || [],
-          },
-        });
+          spacerType: assessment.spacerType || "",
+        },
+        nonComplianceReasons: {
+          lessThan:
+            assessment.nonComplianceReasons?.includes("LESS_THAN") || false,
+          lessThanDetail: assessment.lessThanDetail || "",
+          moreThan:
+            assessment.nonComplianceReasons?.includes("MORE_THAN") || false,
+          moreThanDetail: assessment.moreThanDetail || "",
+          lackKnowledge:
+            assessment.nonComplianceReasons?.includes("LACK_KNOWLEDGE") ||
+            false,
+          notReadLabel:
+            assessment.nonComplianceReasons?.includes("NOT_READ_LABEL") ||
+            false,
+          elderly:
+            assessment.nonComplianceReasons?.includes("ELDERLY") || false,
+          forget:
+            assessment.nonComplianceReasons?.includes("FORGET") || false,
+          fearSideEffects:
+            assessment.nonComplianceReasons?.includes("FEAR_SIDE_EFFECTS") ||
+            false,
+          other: assessment.nonComplianceOther || "",
+        },
+        drps: assessment.drps || "",
+        sideEffects: {
+          hasSideEffects: assessment.hasSideEffects || null,
+          oralCandidiasis:
+            assessment.sideEffects?.includes("ORAL_CANDIDIASIS") || false,
+          hoarseVoice:
+            assessment.sideEffects?.includes("HOARSE_VOICE") || false,
+          palpitation:
+            assessment.sideEffects?.includes("PALPITATION") || false,
+          other: assessment.sideEffectsOther || "",
+          management: assessment.sideEffectsManagement || "",
+        },
+        medications: {
+          medicationStatus: assessment.medicationStatus || "",
+          items: assessment.medications || [],
+        },
+      });
 
-        toast.success("โหลดข้อมูลการเข้ารับการรักษาสำเร็จ");
-      } else {
-        toast.error("ไม่สามารถโหลดข้อมูลการเข้ารับการรักษาได้");
-      }
-    } catch (error) {
-      console.error("Load visit error:", error);
-      toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูล");
-    } finally {
-      setIsLoading(false);
+      toast.success("โหลดข้อมูลการเข้ารับการรักษาสำเร็จ");
+    } else {
+      toast.error("ไม่สามารถโหลดข้อมูลการเข้ารับการรักษาได้");
     }
-  };
+  } catch (error) {
+    console.error("Load visit error:", error);
+    toast.error("เกิดข้อผิดพลาดในการโหลดข้อมูล");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

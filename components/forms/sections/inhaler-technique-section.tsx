@@ -13,7 +13,7 @@ interface TechniqueSteps {
 }
 
 interface InhalerTechniqueData {
-  techniqueCorrect: boolean | null;  // ✅ เพิ่ม null เพื่อรองรับกรณีไม่เลือก
+  techniqueCorrect: boolean | null;
   techniqueSteps: TechniqueSteps;
   spacerType: string;
 }
@@ -69,7 +69,7 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
         [stepKey]: {
           ...technique.techniqueSteps[stepKey],
           [device]: {
-            status: technique.techniqueSteps[stepKey][device].status,
+            status: technique.techniqueSteps[stepKey][device]?.status || 'none',
             note: value,
           }
         }
@@ -77,7 +77,6 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
     });
   };
 
-  // ✅ หา devices ที่ทำผิด (incorrect) ในแต่ละ step
   const getIncorrectDevices = (step: string): Array<{device: string; note: string}> => {
     const stepKey = step.toLowerCase() as keyof TechniqueSteps;
     const stepData = technique.techniqueSteps[stepKey] || {};
@@ -96,21 +95,19 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
     return null;
   };
 
-  // ✅ แก้ไข handler สำหรับ checkbox ให้รองรับ 3 states
-  const handleTechniqueCorrectChange = (checked: boolean) => {
-    if (checked) {
+  // ✅ FIX: แก้ไข handler ให้รองรับ CheckedState (true | false | 'indeterminate')
+  const handleTechniqueCorrectChange = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
       onTechniqueChange({ techniqueCorrect: true });
     } else {
-      // ถ้า uncheck "ถูกต้อง" ให้กลับเป็น null (ไม่เลือก)
       onTechniqueChange({ techniqueCorrect: null });
     }
   };
 
-  const handleTechniqueIncorrectChange = (checked: boolean) => {
-    if (checked) {
+  const handleTechniqueIncorrectChange = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
       onTechniqueChange({ techniqueCorrect: false });
     } else {
-      // ถ้า uncheck "ไม่ถูกต้อง" ให้กลับเป็น null (ไม่เลือก)
       onTechniqueChange({ techniqueCorrect: null });
     }
   };
@@ -126,7 +123,9 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
               onCheckedChange={handleTechniqueCorrectChange}
               id="tech-correct"
             />
-            <Label htmlFor="tech-correct" className="text-xs">ถูกต้องทุกขั้นตอน</Label>
+            <Label htmlFor="tech-correct" className="text-xs cursor-pointer">
+              ถูกต้องทุกขั้นตอน
+            </Label>
           </div>
           <div className="flex items-center space-x-1.5">
             <Checkbox
@@ -134,7 +133,9 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
               onCheckedChange={handleTechniqueIncorrectChange}
               id="tech-incorrect"
             />
-            <Label htmlFor="tech-incorrect" className="text-xs">ไม่ถูกต้อง</Label>
+            <Label htmlFor="tech-incorrect" className="text-xs cursor-pointer">
+              ไม่ถูกต้อง
+            </Label>
           </div>
         </div>
 
@@ -143,7 +144,9 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
           <div className="grid grid-cols-[80px_repeat(7,60px)_1fr] bg-gray-100 border-b">
             <div className="p-1 border-r font-semibold">รูปแบบ</div>
             {DEVICES.map(device => (
-              <div key={device} className="p-1 border-r text-center">{device === 'TURBO' ? 'Turbu' : device}</div>
+              <div key={device} className="p-1 border-r text-center">
+                {device === 'TURBU' ? 'Turbu' : device}
+              </div>
             ))}
             <div className="p-1">รายละเอียดปัญหา (ถ้ามี)</div>
           </div>
@@ -155,11 +158,12 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
               <div key={step} className="grid grid-cols-[80px_repeat(7,60px)_1fr] border-b last:border-b-0">
                 <div className="p-1 border-r font-medium">{step}</div>
                 {DEVICES.map((device) => {
-                  const status = technique.techniqueSteps[step.toLowerCase() as keyof TechniqueSteps]?.[device]?.status || 'none';
+                  const stepKey = step.toLowerCase() as keyof TechniqueSteps;
+                  const status = technique.techniqueSteps[stepKey]?.[device]?.status || 'none';
                   return (
                     <div 
                       key={device} 
-                      className="p-1 border-r flex items-center justify-center cursor-pointer hover:bg-gray-50"
+                      className="p-1 border-r flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
                       onClick={() => handleStepClick(step, device)}
                     >
                       {renderStatusIcon(status)}
@@ -167,14 +171,15 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
                   );
                 })}
                 
-                {/* ✅ แสดง Input เฉพาะ devices ที่ผิด */}
                 <div className="p-1 space-y-1">
                   {incorrectDevices.length === 0 ? (
                     <span className="text-gray-400 text-xs">-</span>
                   ) : (
                     incorrectDevices.map(({ device, note }) => (
                       <div key={device} className="flex items-center gap-1">
-                        <span className="text-xs font-medium text-red-600 whitespace-nowrap">{device}:</span>
+                        <span className="text-xs font-medium text-red-600 whitespace-nowrap">
+                          {device}:
+                        </span>
                         <Input
                           value={note}
                           onChange={(e) => handleNoteChange(step, device, e.target.value)}
@@ -203,7 +208,9 @@ export function InhalerTechniqueSection({ technique, onTechniqueChange }: Inhale
                   })}
                   id={`spacer-${value}`}
                 />
-                <Label htmlFor={`spacer-${value}`} className="text-xs">{label}</Label>
+                <Label htmlFor={`spacer-${value}`} className="text-xs cursor-pointer">
+                  {label}
+                </Label>
               </div>
             ))}
           </div>
