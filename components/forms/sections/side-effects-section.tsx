@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 
 interface SideEffectsData {
-  hasSideEffects: boolean | null; // --- CHANGED: Allow null ---
+  hasSideEffects: boolean | null;
   oralCandidiasis: boolean;
   hoarseVoice: boolean;
   palpitation: boolean;
@@ -25,6 +25,26 @@ const SIDE_EFFECT_OPTIONS = [
 ];
 
 export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEffectsSectionProps) {
+  // ✅ Handler สำหรับ "ไม่เกิด" - คลิกซ้ำเพื่อ deselect
+  const handleNotOccurredChange = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      onSideEffectsChange({ hasSideEffects: false });
+    } else {
+      // ถ้าคลิกออก ให้กลับเป็น null
+      onSideEffectsChange({ hasSideEffects: null });
+    }
+  };
+
+  // ✅ Handler สำหรับ "เกิด" - คลิกซ้ำเพื่อ deselect
+  const handleOccurredChange = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      onSideEffectsChange({ hasSideEffects: true });
+    } else {
+      // ถ้าคลิกออก ให้กลับเป็น null
+      onSideEffectsChange({ hasSideEffects: null });
+    }
+  };
+
   return (
     <Card className="col-span-2 col-start-3 row-start-5 p-2 h-full">
       <div className="space-y-1">
@@ -36,29 +56,21 @@ export function SideEffectsSection({ sideEffects, onSideEffectsChange }: SideEff
           {/* "ไม่เกิด" (Not Occurred) */}
           <div className="flex items-center space-x-1.5">
             <Checkbox
-              // --- CHANGED: Check only if explicitly false ---
               checked={sideEffects.hasSideEffects === false}
-              // --- CHANGED: Set to false if checked, null if unchecked ---
-              onCheckedChange={(checked) =>
-                onSideEffectsChange({ hasSideEffects: checked ? false : null })
-              }
+              onCheckedChange={handleNotOccurredChange}
               id="se-no"
             />
-            <Label htmlFor="se-no" className="text-xs">ไม่เกิด</Label>
+            <Label htmlFor="se-no" className="text-xs cursor-pointer">ไม่เกิด</Label>
           </div>
 
           {/* "เกิด" (Occurred) */}
           <div className="flex items-center space-x-1.5">
             <Checkbox
-              // --- CHANGED: Check only if explicitly true ---
               checked={sideEffects.hasSideEffects === true}
-              // --- CHANGED: Set to true if checked, null if unchecked ---
-              onCheckedChange={(checked) =>
-                onSideEffectsChange({ hasSideEffects: checked ? true : null })
-              }
+              onCheckedChange={handleOccurredChange}
               id="se-yes"
             />
-            <Label htmlFor="se-yes" className="text-xs">เกิด</Label>
+            <Label htmlFor="se-yes" className="text-xs cursor-pointer">เกิด</Label>
           </div>
         </div>
 

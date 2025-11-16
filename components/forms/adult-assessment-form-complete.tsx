@@ -458,7 +458,12 @@ const loadVisitData = async (visitId: string) => {
         },
         drps: assessment.drps || "",
         sideEffects: {
-          hasSideEffects: assessment.hasSideEffects || null,
+          // ✅ FIX: ต้องรักษา false state ไว้ (เหมือนกับ techniqueCorrect)
+          hasSideEffects: assessment.hasSideEffects === true
+            ? true
+            : assessment.hasSideEffects === false
+            ? false
+            : null,
           oralCandidiasis:
             assessment.sideEffects?.includes("ORAL_CANDIDIASIS") || false,
           hoarseVoice:
