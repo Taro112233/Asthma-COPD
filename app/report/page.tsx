@@ -1,7 +1,7 @@
 // app/report/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Home, RefreshCw } from "lucide-react";
@@ -77,12 +77,11 @@ export default function ReportPage() {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Filter states - default to current month
   const [dateFrom, setDateFrom] = useState(getFirstDayOfMonthString());
   const [dateTo, setDateTo] = useState(getTodayDateString());
   const [diagnosis, setDiagnosis] = useState("all");
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -104,18 +103,17 @@ export default function ReportPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateFrom, dateTo, diagnosis]);
 
   useEffect(() => {
     fetchReport();
-  }, [dateFrom, dateTo, diagnosis]);
+  }, [fetchReport]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader username={username} onLogout={handleLogout} />
       
       <div className="container mx-auto px-4 py-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -144,7 +142,6 @@ export default function ReportPage() {
           </div>
         </div>
 
-        {/* Filters */}
         <ReportFilters
           dateFrom={dateFrom}
           dateTo={dateTo}
@@ -161,7 +158,6 @@ export default function ReportPage() {
           </div>
         ) : reportData ? (
           <div className="space-y-6">
-            {/* Summary Cards */}
             <ReportSummary
               totalAssessments={reportData.stats.totalAssessments}
               totalPatients={reportData.stats.totalPatients}
@@ -169,22 +165,17 @@ export default function ReportPage() {
               techniqueCorrectRate={reportData.percentages.techniqueCorrectRate}
             />
 
-            {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Asthma Control Chart */}
               {(diagnosis === 'all' || diagnosis === 'ASTHMA') && (
                 <AsthmaControlChart data={reportData.stats.asthmaControl} />
               )}
 
-              {/* COPD Stage Chart */}
               {(diagnosis === 'all' || diagnosis === 'COPD') && (
                 <COPDStageChart data={reportData.stats.copdStage} />
               )}
 
-              {/* Compliance Distribution */}
               <ComplianceChart data={reportData.stats.complianceRanges} />
 
-              {/* Technique Correctness */}
               <TechniqueChart data={reportData.stats.techniqueCorrectness} />
             </div>
           </div>

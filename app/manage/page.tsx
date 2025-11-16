@@ -1,7 +1,7 @@
 // app/manage/page.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Home, RefreshCw } from "lucide-react";
@@ -12,7 +12,6 @@ import { FilterPanel } from "@/components/manage/filter-panel";
 import { StatsCards } from "@/components/manage/stats-cards";
 import { toast } from "sonner";
 
-// ✅ เพิ่ม properties ที่ขาดหายไป
 interface Assessment {
   id: string;
   assessmentDate: string;
@@ -27,12 +26,12 @@ interface Assessment {
   sideEffectsManagement: string | null;
   drps: string | null;
   medicationStatus: string | null;
-  medications: any;
+  medications: Array<{ name: string; quantity: number }> | null;
   techniqueCorrect: boolean | null;
-  techniqueSteps: any;
-  nonComplianceReasons: string[];       // ✅ เพิ่ม
-  lessThanDetail: string | null;        // ✅ เพิ่ม
-  moreThanDetail: string | null;        // ✅ เพิ่ม
+  techniqueSteps: Record<string, Record<string, { status: string; note: string }>> | null;
+  nonComplianceReasons: string[];
+  lessThanDetail: string | null;
+  moreThanDetail: string | null;
   asthmaData?: {
     controlLevel?: string;
   };
@@ -50,13 +49,6 @@ interface Assessment {
     lastName: string | null;
     age: number | null;
   };
-}
-
-interface Stats {
-  totalAssessments: number;
-  totalPatients: number;
-  recentAssessments: number;
-  diagnosisBreakdown: Record<string, number>;
 }
 
 const getTodayDateString = () => {
@@ -114,7 +106,7 @@ export default function ManagePage() {
     };
   }, [assessments]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -135,11 +127,11 @@ export default function ManagePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [search, diagnosis, dateFrom, dateTo]);
 
   useEffect(() => {
     fetchData();
-  }, [search, diagnosis, dateFrom, dateTo]);
+  }, [fetchData]);
 
   const handleClearFilters = () => {
     setSearch("");

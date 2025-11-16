@@ -1,6 +1,15 @@
 // app/api/reports/stats/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { Prisma, Diagnosis } from '@prisma/client';
+
+interface AsthmaDataType {
+  controlLevel?: string;
+}
+
+interface COPDDataType {
+  stage?: string;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,15 +19,13 @@ export async function GET(request: NextRequest) {
     const diagnosis = searchParams.get('diagnosis') || 'all';
 
     // Build where clause
-    const where: any = {
-      AND: []
-    };
+    const andConditions: Prisma.AssessmentWhereInput[] = [];
 
     // Date range filter
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       fromDate.setHours(0, 0, 0, 0);
-      where.AND.push({
+      andConditions.push({
         assessmentDate: { gte: fromDate }
       });
     }
@@ -26,22 +33,22 @@ export async function GET(request: NextRequest) {
     if (dateTo) {
       const toDate = new Date(dateTo);
       toDate.setHours(23, 59, 59, 999);
-      where.AND.push({
+      andConditions.push({
         assessmentDate: { lte: toDate }
       });
     }
 
     // Filter by diagnosis
     if (diagnosis !== 'all') {
-      where.AND.push({
-        primaryDiagnosis: diagnosis
+      andConditions.push({
+        primaryDiagnosis: diagnosis as Diagnosis
       });
     }
 
-    // If no filters, remove AND array
-    if (where.AND.length === 0) {
-      delete where.AND;
-    }
+    // Build final where clause
+    const where: Prisma.AssessmentWhereInput = andConditions.length > 0 
+      ? { AND: andConditions }
+      : {};
 
     // Fetch all assessments with filters
     const assessments = await prisma.assessment.findMany({
@@ -108,7 +115,7 @@ export async function GET(request: NextRequest) {
     assessments.forEach(assessment => {
       // Asthma Control Level
       if (assessment.asthmaData && typeof assessment.asthmaData === 'object') {
-        const asthmaData = assessment.asthmaData as any;
+        const asthmaData = assessment.asthmaData as AsthmaDataType;
         const controlLevel = asthmaData.controlLevel;
         
         if (controlLevel === 'WELL') {
@@ -124,7 +131,7 @@ export async function GET(request: NextRequest) {
 
       // COPD Stage
       if (assessment.copdData && typeof assessment.copdData === 'object') {
-        const copdData = assessment.copdData as any;
+        const copdData = assessment.copdData as COPDDataType;
         const stage = copdData.stage;
         
         if (stage === 'A') {

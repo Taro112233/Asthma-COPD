@@ -1,11 +1,10 @@
 // app/manage/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +18,53 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface TechniqueStep {
+  status: string;
+  note?: string;
+}
+
+interface TechniqueSteps {
+  [device: string]: TechniqueStep;
+}
+
+interface AssessmentData {
+  id: string;
+  assessmentDate: string;
+  assessedBy: string | null;
+  primaryDiagnosis: string | null;
+  note: string | null;
+  hasSideEffects: boolean;
+  sideEffects: string[];
+  sideEffectsOther: string | null;
+  sideEffectsManagement: string | null;
+  drps: string | null;
+  medicationStatus: string | null;
+  medications: Array<{ name: string; quantity: number }> | null;
+  techniqueCorrect: boolean | null;
+  techniqueSteps: Record<string, TechniqueSteps> | null;
+  compliancePercent: number | null;
+  nonComplianceReasons: string[];
+  lessThanDetail: string | null;
+  moreThanDetail: string | null;
+  asthmaData?: {
+    controlLevel?: string;
+  };
+  copdData?: {
+    stage?: string;
+  };
+  arData?: {
+    symptoms?: string;
+    severity?: string;
+    pattern?: string;
+  };
+  patient: {
+    hospitalNumber: string;
+    firstName: string | null;
+    lastName: string | null;
+    age: number | null;
+  };
+}
+
 const DIAGNOSIS_LABELS: Record<string, string> = {
   'ASTHMA': 'ASTHMA',
   'COPD': 'COPD',
@@ -31,18 +77,14 @@ const DIAGNOSIS_LABELS: Record<string, string> = {
 export default function AssessmentDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const [assessment, setAssessment] = useState<any>(null);
+  const [assessment, setAssessment] = useState<AssessmentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copiedHN, setCopiedHN] = useState(false);
   const [copiedReport, setCopiedReport] = useState(false);
 
-  useEffect(() => {
-    fetchAssessment();
-  }, [params.id]);
-
-  const fetchAssessment = async () => {
+  const fetchAssessment = useCallback(async () => {
     try {
       const res = await fetch(`/api/assessments/${params.id}`);
       if (res.ok) {
@@ -58,7 +100,11 @@ export default function AssessmentDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params.id, router]);
+
+  useEffect(() => {
+    fetchAssessment();
+  }, [fetchAssessment]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -83,6 +129,8 @@ export default function AssessmentDetailPage() {
   };
 
   const handleCopyHN = async () => {
+    if (!assessment) return;
+    
     try {
       await navigator.clipboard.writeText(assessment.patient.hospitalNumber);
       setCopiedHN(true);
@@ -95,11 +143,13 @@ export default function AssessmentDetailPage() {
   };
 
   const generateTechniqueText = () => {
+    if (!assessment) return '-';
+    
     if (assessment.techniqueCorrect) {
       const steps = assessment.techniqueSteps || {};
       const allDevices = new Set<string>();
       
-      Object.values(steps).forEach((devices: any) => {
+      Object.values(steps).forEach((devices) => {
         if (devices && typeof devices === 'object') {
           Object.keys(devices).forEach(device => allDevices.add(device));
         }
@@ -120,7 +170,7 @@ export default function AssessmentDetailPage() {
     const steps = assessment.techniqueSteps || {};
     const allDevices = new Set<string>();
     
-    Object.values(steps).forEach((devices: any) => {
+    Object.values(steps).forEach((devices) => {
       if (devices && typeof devices === 'object') {
         Object.keys(devices).forEach(device => allDevices.add(device));
       }
@@ -137,7 +187,7 @@ export default function AssessmentDetailPage() {
       let allCorrect = true;
       const incorrectDetails: string[] = [];
 
-      Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+      Object.entries(steps).forEach(([, devices]) => {
         if (devices && devices[device]) {
           hasAnyStatus = true;
           const status = devices[device].status;
@@ -168,6 +218,8 @@ export default function AssessmentDetailPage() {
   };
 
   const generateComplianceReasonText = () => {
+    if (!assessment) return '';
+    
     const reasons: string[] = [];
     
     if (assessment.nonComplianceReasons.includes('LESS_THAN') && assessment.lessThanDetail) {
@@ -182,6 +234,8 @@ export default function AssessmentDetailPage() {
   };
 
   const handleCopyReport = async () => {
+    if (!assessment) return;
+    
     try {
       const reportText = `Asthma/COPD ambulatory: ${assessment.assessedBy || '-'}
 Dx: ${assessment.primaryDiagnosis ? DIAGNOSIS_LABELS[assessment.primaryDiagnosis] || assessment.primaryDiagnosis : '-'}
@@ -223,7 +277,7 @@ Other: ${assessment.drps || '-'}
 ยาเหลือ: ${
   assessment.medicationStatus === 'HAS_REMAINING'
     ? assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0
-      ? (assessment.medications as Array<{name: string; quantity: number}>)
+      ? assessment.medications
           .map(med => `${med.name} (${med.quantity})`)
           .join(', ')
       : 'มี'
@@ -405,7 +459,7 @@ Other: ${assessment.drps || '-'}
 ยาเหลือ: ${
   assessment.medicationStatus === 'HAS_REMAINING'
     ? assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0
-      ? (assessment.medications as Array<{name: string; quantity: number}>)
+      ? assessment.medications
           .map(med => `${med.name} (${med.quantity})`)
           .join(', ')
       : 'มี'

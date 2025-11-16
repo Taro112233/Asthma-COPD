@@ -85,18 +85,18 @@ export async function PATCH(
 
     // ✅ Process techniqueSteps - กรอง status 'none' ออก
     const STEPS = ['prepare', 'inhale', 'rinse', 'empty'];
-    const processedTechniqueSteps: { [key: string]: any } = {};
+    const processedTechniqueSteps: Record<string, Record<string, { status: string; note: string }>> = {};
     const deviceSet = new Set<string>(); // ✅ Set สำหรับเก็บ device ที่ใช้งานจริง
 
     STEPS.forEach(step => {
-      const stepData = data.techniqueSteps?.[step];
+      const stepData = data.techniqueSteps?.[step] as Record<string, { status: string; note: string }> | undefined;
       if (stepData) {
         // กรองเฉพาะ entry ที่ status ไม่ใช่ 'none'
         const filteredEntries = Object.entries(stepData)
-          .filter(([device, details]: [string, any]) => 
+          .filter(([, details]) => 
             details && details.status !== 'none' && (details.status === 'correct' || details.status === 'incorrect')
           )
-          .map(([device, details]: [string, any]) => {
+          .map(([device, details]) => {
             deviceSet.add(device); // ✅ เพิ่ม device ที่ผ่านการกรองเข้า Set
             return [device, { // คืนค่าโครงสร้างเดิม
               status: details.status,

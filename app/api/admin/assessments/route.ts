@@ -1,6 +1,7 @@
 // app/api/admin/assessments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { Prisma, Diagnosis } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,13 +12,11 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get('dateTo');
 
     // Build where clause
-    const where: any = {
-      AND: []
-    };
+    const andConditions: Prisma.AssessmentWhereInput[] = [];
 
     // Search by HN, first name, or last name
     if (search) {
-      where.AND.push({
+      andConditions.push({
         OR: [
           { patient: { hospitalNumber: { contains: search, mode: 'insensitive' } } },
           { patient: { firstName: { contains: search, mode: 'insensitive' } } },
@@ -28,8 +27,8 @@ export async function GET(request: NextRequest) {
 
     // Filter by diagnosis
     if (diagnosis !== 'all') {
-      where.AND.push({
-        primaryDiagnosis: diagnosis
+      andConditions.push({
+        primaryDiagnosis: diagnosis as Diagnosis
       });
     }
 
@@ -37,7 +36,7 @@ export async function GET(request: NextRequest) {
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
       fromDate.setHours(0, 0, 0, 0);
-      where.AND.push({
+      andConditions.push({
         assessmentDate: { gte: fromDate }
       });
     }
@@ -45,15 +44,15 @@ export async function GET(request: NextRequest) {
     if (dateTo) {
       const toDate = new Date(dateTo);
       toDate.setHours(23, 59, 59, 999);
-      where.AND.push({
+      andConditions.push({
         assessmentDate: { lte: toDate }
       });
     }
 
-    // If no filters, remove AND array
-    if (where.AND.length === 0) {
-      delete where.AND;
-    }
+    // Build final where clause
+    const where: Prisma.AssessmentWhereInput = andConditions.length > 0 
+      ? { AND: andConditions }
+      : {};
 
     const assessments = await prisma.assessment.findMany({
       where,

@@ -34,6 +34,15 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+interface TechniqueStep {
+  status: string;
+  note?: string;
+}
+
+interface TechniqueSteps {
+  [device: string]: TechniqueStep;
+}
+
 interface Assessment {
   id: string;
   assessmentDate: string;
@@ -48,9 +57,9 @@ interface Assessment {
   sideEffectsManagement: string | null;
   drps: string | null;
   medicationStatus: string | null;
-  medications: any;
+  medications: Array<{ name: string; quantity: number }> | null;
   techniqueCorrect: boolean | null;
-  techniqueSteps: any;
+  techniqueSteps: Record<string, TechniqueSteps> | null;
   nonComplianceReasons: string[];
   lessThanDetail: string | null;
   moreThanDetail: string | null;
@@ -108,7 +117,7 @@ const generateTechniqueText = (assessment: Assessment) => {
     const steps = assessment.techniqueSteps || {};
     const allDevices = new Set<string>();
     
-    Object.values(steps).forEach((devices: any) => {
+    Object.values(steps).forEach((devices) => {
       if (devices && typeof devices === 'object') {
         Object.keys(devices).forEach(device => allDevices.add(device));
       }
@@ -129,7 +138,7 @@ const generateTechniqueText = (assessment: Assessment) => {
   const steps = assessment.techniqueSteps || {};
   const allDevices = new Set<string>();
   
-  Object.values(steps).forEach((devices: any) => {
+  Object.values(steps).forEach((devices) => {
     if (devices && typeof devices === 'object') {
       Object.keys(devices).forEach(device => allDevices.add(device));
     }
@@ -146,7 +155,7 @@ const generateTechniqueText = (assessment: Assessment) => {
     let allCorrect = true;
     const incorrectDetails: string[] = [];
 
-    Object.entries(steps).forEach(([stepKey, devices]: [string, any]) => {
+    Object.entries(steps).forEach(([, devices]) => {
       if (devices && devices[device]) {
         hasAnyStatus = true;
         const status = devices[device].status;
@@ -219,7 +228,7 @@ const formatMedications = (assessment: Assessment) => {
   }
 
   if (assessment.medications && Array.isArray(assessment.medications) && assessment.medications.length > 0) {
-    return (assessment.medications as Array<{name: string; quantity: number}>)
+    return assessment.medications
       .map(med => `${med.name} (${med.quantity})`)
       .join(', ');
   }
@@ -299,8 +308,8 @@ export function AssessmentTable({ assessments, onRefresh }: AssessmentTableProps
   const sortedAssessments = [...assessments].sort((a, b) => {
     if (!sortDirection) return 0;
 
-    let aVal: any = a;
-    let bVal: any = b;
+    let aVal: number | string = '';
+    let bVal: number | string = '';
 
     if (sortField === 'assessmentDate') {
       aVal = new Date(a.assessmentDate).getTime();
