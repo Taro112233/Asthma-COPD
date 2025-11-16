@@ -78,21 +78,20 @@ export async function GET(request: NextRequest) {
         notApplicable: 0,
       },
       
-      // COPD Stage Distribution
+      // COPD Stage Distribution (A, B, E only)
       copdStage: {
         stageA: 0,
         stageB: 0,
-        stageC: 0,
-        stageD: 0,
+        stageE: 0,
         notApplicable: 0,
       },
       
       // Compliance Distribution
       complianceRanges: {
-        excellent: 0,    // 80-100%
-        good: 0,         // 60-79%
-        fair: 0,         // 40-59%
-        poor: 0,         // 0-39%
+        excellent: 0,
+        good: 0,
+        fair: 0,
+        poor: 0,
       },
       
       // Average compliance by diagnosis
@@ -129,7 +128,7 @@ export async function GET(request: NextRequest) {
         stats.asthmaControl.notApplicable++;
       }
 
-      // COPD Stage
+      // COPD Stage (A, B, E only)
       if (assessment.copdData && typeof assessment.copdData === 'object') {
         const copdData = assessment.copdData as COPDDataType;
         const stage = copdData.stage;
@@ -138,10 +137,8 @@ export async function GET(request: NextRequest) {
           stats.copdStage.stageA++;
         } else if (stage === 'B') {
           stats.copdStage.stageB++;
-        } else if (stage === 'C') {
-          stats.copdStage.stageC++;
-        } else if (stage === 'D') {
-          stats.copdStage.stageD++;
+        } else if (stage === 'E') {
+          stats.copdStage.stageE++;
         }
       } else if (assessment.primaryDiagnosis === 'COPD') {
         stats.copdStage.notApplicable++;

@@ -27,8 +27,7 @@ interface ReportStats {
   copdStage: {
     stageA: number;
     stageB: number;
-    stageC: number;
-    stageD: number;
+    stageE: number;
     notApplicable: number;
   };
   complianceRanges: {

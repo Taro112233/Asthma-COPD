@@ -7,8 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 interface COPDStageData {
   stageA: number;
   stageB: number;
-  stageC: number;
-  stageD: number;
+  stageE: number;
   notApplicable: number;
 }
 
@@ -23,10 +22,6 @@ const COLORS = {
 };
 
 export function COPDStageChart({ data }: COPDStageChartProps) {
-  // ✅ รวม stageC + stageD = stageE (≥2 exacerbations)
-  const stageE = (data.stageC || 0) + (data.stageD || 0);
-  
-  // ✅ แสดง 3 แท่งเสมอ ไม่ filter
   const chartData = [
     { 
       name: 'Stage A', 
@@ -42,13 +37,13 @@ export function COPDStageChart({ data }: COPDStageChartProps) {
     },
     { 
       name: 'Stage E', 
-      value: stageE,
+      value: data.stageE || 0,
       color: COLORS.stageE,
       description: '≥2 moderate exacerbation or ≥1 leading to hospitalization'
     },
   ];
 
-  const total = data.stageA + data.stageB + stageE;
+  const total = data.stageA + data.stageB + data.stageE;
 
   if (total === 0) {
     return (
