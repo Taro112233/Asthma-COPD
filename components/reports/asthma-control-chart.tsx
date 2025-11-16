@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 interface AsthmaControlData {
   wellControlled: number;
@@ -19,27 +19,29 @@ const COLORS = {
   wellControlled: '#10b981',    // green-500
   partlyControlled: '#f59e0b',  // amber-500
   uncontrolled: '#ef4444',      // red-500
-  notApplicable: '#9ca3af',     // gray-400
 };
 
 export function AsthmaControlChart({ data }: AsthmaControlChartProps) {
   const chartData = [
     { 
-      name: 'Well Controlled (0 ข้อ)', 
-      value: data.wellControlled,
-      color: COLORS.wellControlled
+      name: 'Well Controlled', 
+      value: data.wellControlled || 0,
+      color: COLORS.wellControlled,
+      description: '0 ข้อ'
     },
     { 
-      name: 'Partly Controlled (1-2 ข้อ)', 
-      value: data.partlyControlled,
-      color: COLORS.partlyControlled
+      name: 'Partly Controlled', 
+      value: data.partlyControlled || 0,
+      color: COLORS.partlyControlled,
+      description: '1-2 ข้อ'
     },
     { 
-      name: 'Uncontrolled (3-4 ข้อ)', 
-      value: data.uncontrolled,
-      color: COLORS.uncontrolled
+      name: 'Uncontrolled', 
+      value: data.uncontrolled || 0,
+      color: COLORS.uncontrolled,
+      description: '3-4 ข้อ'
     },
-  ].filter(item => item.value > 0); // Show only items with data
+  ];
 
   const total = data.wellControlled + data.partlyControlled + data.uncontrolled;
 
@@ -67,26 +69,34 @@ export function AsthmaControlChart({ data }: AsthmaControlChartProps) {
       </CardHeader>
       <CardContent className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                  return (
+                    <div className="bg-white p-3 border rounded shadow-lg">
+                      <p className="font-semibold text-lg">{data.name}</p>
+                      <p className="text-sm text-gray-600 mt-1">{data.description}</p>
+                      <p className="font-medium mt-2 text-blue-600">
+                        {data.value} รายการ ({percentage}%)
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <Bar dataKey="value" radius={[8, 8, 0, 0]}>
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value: number) => [`${value} รายการ`, '']}
-            />
-            <Legend />
-          </PieChart>
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
