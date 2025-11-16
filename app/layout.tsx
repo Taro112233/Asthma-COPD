@@ -12,8 +12,8 @@ const sarabun = Sarabun({
 });
 
 export const metadata: Metadata = {
-  title: "Dengue Assessment Form",
-  description: "แบบประเมินความเสี่ยงในการเป็นไข้เลือดออก",
+  title: "Asthma & COPD Clinic",
+  description: "ระบบจัดการคลินิกโรคหืดและโรคปอดอุดกั้นเรื้อรัง",
 };
 
 export default function RootLayout({
