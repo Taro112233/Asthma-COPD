@@ -136,7 +136,7 @@ Copy-Item .env.example .env
 
 ```env
 # Database Connection (Neon PostgreSQL)
-DATABASE_URL="postgresql://neondb_owner:npg_9IPaXnKsY3UW@ep-dark-smoke-a1u448zz-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DATABASE_URL="postgresql://neondb_owner:npg_9IPaXnKsY3UW@ep-fake-environment-a1u448zz-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # Authentication
 SYSTEM_PASSWORD="123456"
